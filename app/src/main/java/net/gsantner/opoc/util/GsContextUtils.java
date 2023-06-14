@@ -189,7 +189,6 @@ public class GsContextUtils {
     protected static String m_chooserTitle = "➥";
 
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //########################
     //## Resources
     //########################
@@ -2507,7 +2506,7 @@ public class GsContextUtils {
                 .show();
     }
 
-    public <T extends GsContextUtils> T showSoftKeyboard(final Activity activity, final boolean show, final View ... view) {
+    public <T extends GsContextUtils> T showSoftKeyboard(final Activity activity, final boolean show, final View... view) {
         if (activity != null) {
             final InputMethodManager imm = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
             final View focus = (view != null && view.length > 0) ? view[0] : activity.getCurrentFocus();
@@ -2540,6 +2539,28 @@ public class GsContextUtils {
         AlertDialog.Builder dialog = new AlertDialog.Builder(context)
                 .setPositiveButton(android.R.string.ok, null).setOnDismissListener(dismissedListener)
                 .setView(scroll);
+        if (resTitleId != 0) {
+            dialog.setTitle(resTitleId);
+        }
+        dialogFullWidth(dialog.show(), true, false);
+    }
+
+    public void showDialogWithTextView(final Activity context, @StringRes int resTitleId, String text, String positiveButtonText, String negativeButtonText, DialogInterface.OnClickListener positiveListener, DialogInterface.OnClickListener negativeListener) {
+        ScrollView scroll = new ScrollView(context);
+        AppCompatTextView textView = new AppCompatTextView(context);
+        int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16, context.getResources().getDisplayMetrics());
+
+        scroll.setPadding(padding, 0, padding, 0);
+        scroll.addView(textView);
+        textView.setMovementMethod(new LinkMovementMethod());
+        textView.setText(text);
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 17);
+
+        AlertDialog.Builder dialog = new AlertDialog.Builder(context);
+        dialog.setView(scroll);
+        dialog.setPositiveButton(positiveButtonText, positiveListener);
+        dialog.setNegativeButton(negativeButtonText, negativeListener);
+
         if (resTitleId != 0) {
             dialog.setTitle(resTitleId);
         }

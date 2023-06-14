@@ -23,7 +23,8 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="title">Title</string>
     <string name="empty_directory">Empty directory</string>
     <string name="enter_name_of_folder">Enter the name of your folder</string>
-    <string name="create_folder">Create Folder</string>
+    <string name="create_file">Create file</string>
+    <string name="create_folder">Create folder</string>
     <string name="create_new_document">Create new document</string>
     <string name="move">Move</string>
     <string name="copy">Copy</string>
@@ -40,6 +41,7 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="share_to_arrow" tools:ignore="TypographyEllipsis">Share to&#8230;</string>
     <string name="share">Share</string>
     <string name="search">Search</string>
+    <string name="content">Content</string>
     <string name="display_converted_markup">Display converted markup</string>
     <string name="editor">Editor</string>
     <string name="folders">Folders</string>
@@ -55,6 +57,7 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="plaintext">Plain Text</string>
     <string name="file">File</string>
     <string name="image">Image</string>
+    <string name="audio">Audio</string>
     <string name="font_size">Font Size</string>
     <string name="render_rtl_language">Render for right-to-left languages</string>
     <string name="error_cannot_create_notebook_dir__appspecific">Error: Cannot create notebook directory</string>
@@ -63,6 +66,7 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="last_modified">Last modified</string>
     <string name="select_this_folder">Select this folder</string>
     <string name="select">Select</string>
+    <string name="select_all">Select all</string>
     <string name="create">Create</string>
     <string name="select_entries">Select entries</string>
     <string name="one_item_selected">One item selected</string>
@@ -72,7 +76,8 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="hide_statusbar">Hide status bar</string>
 
     <string name="name">Name</string>
-    <string name="url_or_path">URL / Path</string>
+    <string name="url_or_path">URL/Path</string>
+    <string name="link">Link</string>
     <string name="insert_link">Insert Link</string>
     <string name="insert_image">Insert Image</string>
 
@@ -93,7 +98,9 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="date">Date</string>
     <string name="deleteme____1">Name</string>
     <string name="size">Size</string>
+    <string name="mime_type">MIME type</string>
     <string name="reverse_order">Reverse order</string>
+    <string name="dotfiles">.dotfiles</string>
     <string name="contribute">Contribute</string>
     <string name="project_page">Project page</string>
     <string name="press_back_again_to_exit">Press \'Back\' again to exit</string>
@@ -110,8 +117,10 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="priority">Priority</string>
     <string name="history">History</string>
     <string name="sync">Sync</string>
-    <string name="search_or_custom">Search / Custom</string>
+    <string name="search_or_custom">Search/Custom</string>
     <string name="save">Save</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="whether_save">The file has changed, do you want to save it?</string>
     <string name="update">Update</string>
     <string name="clear">Clear</string>
     <string name="due_date">Due date</string>
@@ -274,6 +283,7 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="basic_color_scheme">Basic color scheme</string>
     <string name="background_foreground_color_in_editor_works_dark_light">Changes background and foreground color of the text editor. Adjusts to app theme so available in light and dark theme. Syntax highlighting colors remain the same.</string>
     <string name="preset">Preset</string>
+    <string name="hexcode">Hex code</string>
     <string name="foreground">Foreground</string>
     <string name="background">Background</string>
     <string name="set_foreground_or_background_color_hexcolor_also_possible">Set foreground or background color of text? Inserting hex color code is also possible.</string>
@@ -340,9 +350,11 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="rotate">Rotate</string>
     <string name="template">Template</string>
     <string name="send_debug_log">Send Debug Log</string>
-    <string name="print_pdf">Print / PDF</string>
+    <string name="print_pdf">Print/PDF</string>
     <string name="bigger_headings">Bigger headings</string>
     <string name="increase_text_size_of_headings_according_to_level">Increase text size of headers according to level (# h1, ## h2. ### h3…)</string>
+    <string name="catalog">Catalog</string>
+    <string name="no_catalog_defined">No catalog defined</string>
     <string name="current">Current</string>
     <string name="record_audio">Record Audio</string>
     <string name="attach">Attach</string>
@@ -353,6 +365,9 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="reading">Reading</string>
     <string name="read">Read</string>
     <string name="table">Table</string>
+    <string name="table_insert_header">Table - Insert Header</string>
+    <string name="table_insert_rows">Table - Insert Row</string>
+    <string name="columns_number">Columns</string>
     <string name="how_much_columns_press_table_button_long_to_start_table">How many columns? Press table button long to start a table (insert header), press short to add a row.</string>
     <string name="example_of_a_markdown_table">Example of a Markdown table</string>
     <string name="delete_lines">Delete lines</string>
@@ -387,7 +402,8 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="choose_format">Choose format</string>
     <string name="selected">Selected</string>
     <string name="back">Back</string>
-    <string name="expand_collapse">Expand / Collapse</string>
+    <string name="expand_collapse">Expand/Collapse</string>
+    <string name="indent">Indent</string>
     <string name="essential">Essential</string>
     <string name="append_human_readable_uuid_to_new_tasks">Append human readable UUID to new tasks</string>
     <string name="action_order">Action order</string>
@@ -410,7 +426,8 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="file_description_format_dialog">Format for the description under each file in the file browser. Follows Android\'s SimpleDateFormat rules, with the addition of FS for showing file size. Leave blank to use the default format for your locale.\n\nExample input:\nFS yyyy MMM dd hh:mm:ss aa\nOutput format:\n30KB 2020 Mar 20 11:24:52 PM</string>
     <string name="loading_default_value">Loading default value</string>
     <string name="file_settings">File settings</string>
-    <string name="search_and_replace">Search / Replace</string>
+    <string name="replace">Replace</string>
+    <string name="search_and_replace">Search/Replace</string>
     <string name="search_for">Search for</string>
     <string name="replace_with">Replace with</string>
     <string name="replace_once">Replace (1)</string>
@@ -428,6 +445,8 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="max_search_depth">Search depth</string>
     <string name="ignore_list">Ignore list</string>
     <string name="do_not_search_specified_files_and_folders">Do not search specified files and folders.\nUse new line as separator.\nUse quotes for exact dir names: \"Test\".\nOr use Regex \'^[.].*\'\nExamples: ^\\..*\n\"test\"\n\"Test\"\n.*secret.*\n.*BACKUP.*\n.*.ini</string>
+    <string name="regex">Regex</string>
+    <string name="multiline">Multiline</string>
     <string name="regex_search">Regex search</string>
     <string name="case_sensitive">Case sensitive</string>
     <string name="stop_search_after_first_match">Stop search after first match</string>

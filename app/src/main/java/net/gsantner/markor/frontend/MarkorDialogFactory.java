@@ -32,7 +32,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.core.content.ContextCompat;
@@ -62,7 +61,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -137,25 +135,28 @@ public class MarkorDialogFactory {
         final DialogOptions dopt = new DialogOptions();
         final String PREF_LAST_USED_TABLE_SIZE = "pref_key_last_used_table_size";
         final int lastUsedTableSize = as().getInt(PREF_LAST_USED_TABLE_SIZE, 3);
-        final List<String> availableData = new ArrayList<>();
-        for (int i = 2; i <= 5; i++) {
-            availableData.add(Integer.toString(i));
-        }
-
         baseConf(activity, dopt);
-        dopt.titleText = R.string.table;
-        dopt.messageText = activity.getString(R.string.how_much_columns_press_table_button_long_to_start_table);
+        if (isHeader) {
+            dopt.titleText = R.string.table_insert_header;
+        } else {
+            dopt.titleText = R.string.table_insert_rows;
+        }
+        // dopt.messageText = activity.getString(R.string.how_much_columns_press_table_button_long_to_start_table) + "\n";
         dopt.messageText += activity.getString(R.string.example_of_a_markdown_table) + ":\n\n";
-        dopt.messageText += "| id | name | info |\n|-----|-----------|--------|\n| 1  | John   | text |\n| 2  | Anna   | text |\n";
+        dopt.messageText += "| id   | name | gender |\n";
+        dopt.messageText += "| ---- | ---- | ------ |\n";
+        dopt.messageText += "| 1001 | John | male   |\n";
+        dopt.messageText += "| 1002 | Anna | female |\n";
 
         dopt.callback = colsStr -> {
             as().setInt(PREF_LAST_USED_TABLE_SIZE, Integer.parseInt(colsStr));
             callback.callback(Integer.parseInt(colsStr), isHeader);
         };
-        dopt.data = availableData;
+        dopt.messageMonospaced = true;
         dopt.searchInputType = InputType.TYPE_CLASS_NUMBER;
+        dopt.defaultText = String.valueOf(lastUsedTableSize);
         dopt.highlightData = Collections.singletonList(Integer.toString(lastUsedTableSize));
-        dopt.searchHintText = R.string.search_or_custom;
+        dopt.searchHintText = R.string.columns_number;
         GsSearchOrCustomTextDialog.showMultiChoiceDialogWithSearchFilterUI(activity, dopt);
     }
 
@@ -413,7 +414,7 @@ public class MarkorDialogFactory {
         // -------------------------------------
         dopt.titleText = title;
         dopt.isSearchEnabled = enableSearch;
-        dopt.searchHintText = R.string.search;
+        dopt.searchHintText = R.string.content;
         dopt.isMultiSelectEnabled = true;
         addRestoreKeyboard(activity, dopt, text, showIme);
 
@@ -455,7 +456,7 @@ public class MarkorDialogFactory {
             final DialogOptions doptSave = new DialogOptions();
             baseConf(activity, doptSave);
             doptSave.titleText = R.string.name;
-            doptSave.searchHintText = R.string.empty_string;
+            doptSave.searchHintText = R.string.content;
             doptSave.callback = saveTitle -> {
                 if (!TextUtils.isEmpty(saveTitle)) {
                     TodoTxtFilter.saveFilter(activity, saveTitle, query);
@@ -510,7 +511,7 @@ public class MarkorDialogFactory {
     public static void showSttSearchDialog(final Activity activity, final EditText text) {
         final DialogOptions dopt = makeSttLineSelectionDialog(activity, text, t -> true);
         dopt.titleText = R.string.search_documents;
-        dopt.neutralButtonText = R.string.search_and_replace;
+        dopt.neutralButtonText = R.string.replace;
         dopt.neutralButtonCallback = (dialog) -> {
             dialog.dismiss();
             SearchAndReplaceTextDialog.showSearchReplaceDialog(activity, text.getText(), TextViewUtils.getSelection(text));
@@ -571,7 +572,7 @@ public class MarkorDialogFactory {
             final Activity activity,
             final @StringRes int title,
             final List<String> data,
-            final @Nullable EditText text,              // Passed in here for keyboard restore
+            final @Nullable EditText text, // Passed in here for keyboard restore
             final GsCallback.a1<String> insertCallback
     ) {
         GsSearchOrCustomTextDialog.DialogOptions dopt = new GsSearchOrCustomTextDialog.DialogOptions();
@@ -579,7 +580,6 @@ public class MarkorDialogFactory {
         dopt.data = new ArrayList<>(new TreeSet<>(data));
         dopt.callback = insertCallback;
         dopt.titleText = title;
-        dopt.searchHintText = R.string.search_or_custom;
         dopt.isMultiSelectEnabled = true;
         dopt.positionCallback = (result) -> {
             for (final Integer pi : result) {
@@ -633,13 +633,13 @@ public class MarkorDialogFactory {
         final Editable edit = text.getText();
         dopt.data = Arrays.asList(edit.toString().split("\n", -1)); // Do not ignore empty lines
         dopt.extraFilter = "[^\\s]+"; // Line must have one or more non-whitespace to display
-        dopt.titleText = R.string.search_documents;
-        dopt.searchHintText = R.string.search;
+        dopt.titleText = R.string.search;
+        dopt.searchHintText = R.string.content;
         dopt.neutralButtonCallback = (dialog) -> {
             dialog.dismiss();
             SearchAndReplaceTextDialog.showSearchReplaceDialog(activity, edit, TextViewUtils.getSelection(text));
         };
-        dopt.neutralButtonText = R.string.search_and_replace;
+        dopt.neutralButtonText = R.string.replace;
         dopt.positionCallback = (result) -> TextViewUtils.selectLines(text, result);
         addRestoreKeyboard(activity, dopt, text);
         GsSearchOrCustomTextDialog.showMultiChoiceDialogWithSearchFilterUI(activity, dopt);
@@ -684,7 +684,7 @@ public class MarkorDialogFactory {
         baseConf(activity, dopt);
         dopt.data = data;
         dopt.titleText = R.string.table_of_contents;
-        dopt.searchHintText = R.string.search;
+        dopt.searchHintText = R.string.content;
         dopt.isSearchEnabled = true;
         dopt.neutralButtonText = R.string.filter;
         dopt.positionCallback = result -> {
@@ -865,7 +865,7 @@ public class MarkorDialogFactory {
         dopt.data = data;
         dopt.isSearchEnabled = true;
         dopt.titleText = R.string.insert_snippet;
-        dopt.messageText = Html.fromHtml("<small><small>" + as().getSnippetsFolder().getAbsolutePath() + "</small></small>");
+        dopt.messageText = Html.fromHtml("<small><small>" + as().getSnippetsFolder().getAbsolutePath() + "</small></small><br/>", Html.FROM_HTML_MODE_COMPACT);
         dopt.positionCallback = (ind) -> callback.callback(GsFileUtils.readTextFileFast(texts.get(data.get(ind.get(0)))).first);
         addRestoreKeyboard(activity, dopt, edit, showIme);
         GsSearchOrCustomTextDialog.showMultiChoiceDialogWithSearchFilterUI(activity, dopt);

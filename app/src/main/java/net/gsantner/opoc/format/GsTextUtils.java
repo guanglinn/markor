@@ -10,10 +10,7 @@
 package net.gsantner.opoc.format;
 
 import android.util.Base64;
-import android.util.Pair;
 
-import net.gsantner.opoc.util.GsCollectionUtils;
-import net.gsantner.opoc.util.GsContextUtils;
 import net.gsantner.opoc.wrapper.GsCallback;
 
 import org.json.JSONArray;
@@ -27,10 +24,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @SuppressWarnings({"unused", "SpellCheckingInspection"})
 public class GsTextUtils {
-    public static String UTF8 = "UTF-8";
+    private static String CHARSET = "UTF-8";
+    public static final String URL_REGEX = "[a-zA-z]+://[a-zA-Z0-9\\.\\?\\/@#%&_\\-=:]+";
 
     /**
      * This is a simple method that tries to extract an URL around a given index.
@@ -41,19 +41,30 @@ public class GsTextUtils {
      * @return Extracted URL or {@code null} if none found
      */
     public static String tryExtractUrlAroundPos(String text, int pos) {
-        pos = Math.min(Math.max(0, pos), text.length() - 1);
-        if (pos >= 0 && pos < text.length()) {
-            int begin = Math.max(text.lastIndexOf("https://", pos), text.lastIndexOf("http://", pos));
-            if (begin >= 0) {
-                int end = text.length();
-                for (String check : new String[]{"\n", " ", "\t", "\r", ")", "|"}) {
-                    if ((pos = text.indexOf(check, begin)) > begin && pos < end) {
-                        end = pos;
-                    }
-                }
+        if (text.length() < 8) {
+            return null;
+        }
 
-                if ((end - begin) > 5 && end > 5) {
-                    return text.substring(begin, end).replaceAll("[\\]=%>}]+$", "");
+        final int MATCH_RANGE = 256;
+
+        if (pos > -1 && pos < text.length()) {
+            int chunkStart = 0;
+            if (pos > MATCH_RANGE) {
+                chunkStart = pos - MATCH_RANGE;
+            }
+
+            int chunkEnd = text.length();
+            if (text.length() > pos + MATCH_RANGE) {
+                chunkEnd = pos + MATCH_RANGE;
+            }
+
+            String chunk = text.substring(chunkStart, chunkEnd);
+            int chunkPos = pos - chunkStart;
+
+            Matcher matcher = Pattern.compile(URL_REGEX).matcher(chunk);
+            while (matcher.find()) {
+                if (matcher.start() <= chunkPos && matcher.end() >= chunkPos) {
+                    return chunk.substring(matcher.start(), matcher.end()); // Return URL
                 }
             }
         }
@@ -61,7 +72,7 @@ public class GsTextUtils {
     }
 
     /**
-     * find '\n' to the right and left of text[pos] .. text[posEnd].
+     * Find '\n' to the right and left of text[pos] .. text[posEnd].
      * If left does not exist 0 (begin of text) is used.
      * if right does not exist text.length() (end of text) is used.
      *
@@ -117,7 +128,6 @@ public class GsTextUtils {
         return text;
     }
 
-
     // Code snippet 'function huuid' is licensed CC0/Public Domain license. Revision 1, Gregor Santner, 2020
     //
     // Generate a UUID that starts with human readable datetime, use 8-4-4-4-12 UUID grouping
@@ -153,7 +163,7 @@ public class GsTextUtils {
 
     public static String toBase64(final String s) {
         try {
-            return toBase64(s.getBytes(UTF8));
+            return toBase64(s.getBytes(CHARSET));
         } catch (Exception e) {
             return "";
         }
@@ -173,7 +183,7 @@ public class GsTextUtils {
 
     public static String fromBase64ToString(final String s) {
         try {
-            return new String(fromBase64(s.getBytes(UTF8)), UTF8);
+            return new String(fromBase64(s.getBytes(CHARSET)), CHARSET);
         } catch (Exception e) {
             return "";
         }
@@ -208,7 +218,6 @@ public class GsTextUtils {
         boolean a = withAlpha != null && withAlpha.length >= 1 && withAlpha[0];
         return String.format(a ? "#%08X" : "#%06X", (a ? 0xFFFFFFFF : 0xFFFFFF) & intColor);
     }
-
 
     /**
      * Convert escape sequences in string to escaped special characters. For example, convert
@@ -283,7 +292,6 @@ public class GsTextUtils {
         }
         return count;
     }
-
 
     /**
      * Pad string on left up to size

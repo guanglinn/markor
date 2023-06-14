@@ -19,7 +19,6 @@ import net.gsantner.markor.format.ActionButtonBase;
 import net.gsantner.markor.frontend.AttachLinkOrFileDialog;
 import net.gsantner.markor.frontend.MarkorDialogFactory;
 import net.gsantner.markor.frontend.textview.AutoTextFormatter;
-import net.gsantner.markor.frontend.textview.TextViewUtils;
 import net.gsantner.markor.model.Document;
 
 import java.util.Arrays;
@@ -70,8 +69,8 @@ public class MarkdownActionButtons extends ActionButtonBase {
                 new ActionItem(R.string.abid_common_new_line_below, R.drawable.ic_baseline_keyboard_return_24, R.string.start_new_line_below),
                 new ActionItem(R.string.abid_common_move_text_one_line_up, R.drawable.ic_baseline_arrow_upward_24, R.string.move_text_one_line_up),
                 new ActionItem(R.string.abid_common_move_text_one_line_down, R.drawable.ic_baseline_arrow_downward_24, R.string.move_text_one_line_down),
-                new ActionItem(R.string.abid_common_insert_snippet, R.drawable.ic_baseline_file_copy_24, R.string.insert_snippet),
-
+                new ActionItem(R.string.abid_common_insert_snippet, R.drawable.ic_insert_black_24dp, R.string.insert_snippet),
+                //
                 new ActionItem(R.string.abid_common_web_jump_to_very_top_or_bottom, R.drawable.ic_vertical_align_center_black_24dp, R.string.jump_to_bottom, ActionItem.DisplayMode.VIEW),
                 new ActionItem(R.string.abid_common_web_jump_to_table_of_contents, R.drawable.ic_list_black_24dp, R.string.table_of_contents, ActionItem.DisplayMode.VIEW),
                 new ActionItem(R.string.abid_common_rotate_screen, R.drawable.ic_rotate_left_black_24dp, R.string.rotate, ActionItem.DisplayMode.ANY),
@@ -182,30 +181,31 @@ public class MarkdownActionButtons extends ActionButtonBase {
         StringBuilder sb = new StringBuilder();
         _hlEditor.requestFocus();
 
-        // Append if current line empty
-        final int[] sel = TextViewUtils.getLineSelection(_hlEditor);
-        if (sel[0] != -1 && sel[0] == sel[1]) {
-            sb.append("\n");
+        /**
+         * Append if current line empty
+         * final int[] sel = TextViewUtils.getLineSelection(_hlEditor);
+         * if (sel[0] != -1 && sel[0] == sel[1]) { sb.append("\n"); }
+         */
+
+        sb.append("|");
+        for (int i = 0; i < cols; i++) {
+            sb.append("    |");
         }
 
-        for (int i = 0; i < cols - 1; i++) {
-            sb.append("  | ");
-        }
         if (isHeaderEnabled) {
             sb.append("\n");
+            sb.append("|");
             for (int i = 0; i < cols; i++) {
-                sb.append("---");
-                if (i < cols - 1) {
-                    sb.append("|");
-                }
+                sb.append(" ---- |");
             }
         }
         _hlEditor.moveCursorToEndOfLine(0);
         _hlEditor.insertOrReplaceTextOnCursor(sb.toString());
-        _hlEditor.moveCursorToBeginOfLine(0);
         if (isHeaderEnabled) {
             _hlEditor.simulateKeyPress(KeyEvent.KEYCODE_DPAD_UP);
+            _hlEditor.moveCursorToEndOfLine(0);
         }
+        _hlEditor.moveCursorToBeginOfLine(3);
     }
 
     @Override

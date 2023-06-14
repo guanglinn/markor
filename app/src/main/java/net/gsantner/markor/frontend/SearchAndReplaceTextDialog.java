@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
 
 public class SearchAndReplaceTextDialog {
     private static final String RECENT_SEARCH_REPLACE_STRING = "search_replace_dialog__recent_search_replace_history";
-    private static final int MAX_RECENT_SEARCH_REPLACE = 10;
+    private static final int MAX_RECENT_SEARCH_REPLACE = 8;
 
     private final EditText searchText;
     private final EditText replaceText;
@@ -131,11 +131,10 @@ public class SearchAndReplaceTextDialog {
 
                 if (pos >= 0 && pos < recentReplaces.size()) {
                     final ReplaceGroup rg = recentReplaces.get(pos);
-                    final String desc = String.format("%s: %s\n%s: %s\n%s: %b, %s: %b\n",
-                            res.getString(R.string.search_for), rg._search,
-                            res.getString(R.string.replace_with), rg._replace,
-                            res.getString(R.string.regex), rg._isRegex,
-                            res.getString(R.string.multiline), rg._isMultiline);
+                    final String desc = String.format(": %s\n: %s\n%s  %s\n",
+                            rg._search, rg._replace,
+                            rg._isRegex ? "✔" : "❌",
+                            rg._isMultiline ? "✔" : "❌");
                     textView.setText(desc);
                 }
 
@@ -281,7 +280,7 @@ public class SearchAndReplaceTextDialog {
         if (error) {
             matchState.setText(res.getString(R.string.search_replace_pattern_error_message));
         } else {
-            matchState.setText(String.format(res.getConfiguration().locale, "%s: %d", res.getString(R.string.matches), count));
+            matchState.setText(String.format(res.getConfiguration().locale, "%s %d", res.getString(R.string.matches), count));
         }
     }
 

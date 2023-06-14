@@ -20,6 +20,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -51,6 +52,7 @@ import java.util.concurrent.TimeUnit;
 
 import other.writeily.widget.WrMarkorWidgetProvider;
 
+
 public class MainActivity extends MarkorBaseActivity implements GsFileBrowserFragment.FilesystemFragmentOptionsListener, NavigationBarView.OnItemSelectedListener {
 
     public static boolean IS_DEBUG_ENABLED = false;
@@ -66,13 +68,21 @@ public class MainActivity extends MarkorBaseActivity implements GsFileBrowserFra
     private MarkorContextUtils _cu;
     private File _quickSwitchPrevFolder = null;
 
+    private final int TAB_INDEX_NOTEBOOK = 0;
+    private final int TAB_INDEX_QUICK_NOTE = 1;
+    private final int TAB_INDEX_TODO = 2;
+    private final int TAB_INDEX_MORE = 3;
+
+
     @SuppressLint("SdCardPath")
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        IS_DEBUG_ENABLED |= BuildConfig.IS_TEST_BUILD;
-        _cu = new MarkorContextUtils(this);
         setContentView(R.layout.main__activity);
+
+        IS_DEBUG_ENABLED |= BuildConfig.IS_TEST_BUILD;
+
+        _cu = new MarkorContextUtils(this);
         _bottomNav = findViewById(R.id.bottom_navigation_bar);
         _viewPager = findViewById(R.id.main__view_pager_container);
         _fab = findViewById(R.id.fab_add_new_item);
@@ -112,7 +122,6 @@ public class MainActivity extends MarkorBaseActivity implements GsFileBrowserFra
             _viewPager.postDelayed(() -> _viewPager.setCurrentItem(tabIdToPos(startTab)), 100);
         }
     }
-
 
     @Override
     public void onSaveInstanceState(@NonNull final Bundle outState) {
@@ -206,8 +215,13 @@ public class MainActivity extends MarkorBaseActivity implements GsFileBrowserFra
         getMenuInflater().inflate(R.menu.main__menu, menu);
         menu.findItem(R.id.action_settings).setVisible(_appSettings.isShowSettingsOptionInMainToolbar());
 
-        _cu.tintMenuItems(menu, true, Color.WHITE);
-        _cu.setSubMenuIconsVisibility(menu, true);
+        if (getCurrentPos() == tabIdToPos(R.id.nav_more)) {
+            getToolbar().getMenu().setGroupVisible(0, false);
+        } else {
+            _cu.tintMenuItems(menu, true, Color.WHITE);
+            _cu.setSubMenuIconsVisibility(menu, true);
+            getToolbar().getMenu().setGroupVisible(0, true);
+        }
         return true;
     }
 
@@ -321,8 +335,9 @@ public class MainActivity extends MarkorBaseActivity implements GsFileBrowserFra
 
         // Confirm exit with back / snackbar
         _doubleBackToExitPressedOnce = true;
-        _cu.showSnackBar(this, R.string.press_back_again_to_exit, false, R.string.exit, view -> finish());
-        new Handler().postDelayed(() -> _doubleBackToExitPressedOnce = false, 2000);
+        // _cu.showSnackBar(this, R.string.press_back_again_to_exit, false, R.string.exit, view -> finish());
+        Toast.makeText(getApplicationContext(), R.string.press_back_again_to_exit, Toast.LENGTH_SHORT).show();
+        new Handler().postDelayed(() -> _doubleBackToExitPressedOnce = false, 1200);
     }
 
     @Override
@@ -341,11 +356,11 @@ public class MainActivity extends MarkorBaseActivity implements GsFileBrowserFra
     }
 
     public int tabIdToPos(final int id) {
-        if (id == R.id.nav_notebook) return 0;
-        if (id == R.id.nav_todo) return 1;
-        if (id == R.id.nav_quicknote) return 2;
-        if (id == R.id.nav_more) return 3;
-        return 0;
+        if (id == R.id.nav_notebook) return TAB_INDEX_NOTEBOOK;
+        if (id == R.id.nav_quicknote) return TAB_INDEX_QUICK_NOTE;
+        if (id == R.id.nav_todo) return TAB_INDEX_TODO;
+        if (id == R.id.nav_more) return TAB_INDEX_MORE;
+        return TAB_INDEX_NOTEBOOK;
     }
 
     public int tabIdFromPos(final int pos) {
@@ -357,30 +372,30 @@ public class MainActivity extends MarkorBaseActivity implements GsFileBrowserFra
     }
 
     public String getPosTitle(final int pos) {
-        if (pos == 0) return getFileBrowserTitle();
-        if (pos == 1) return getString(R.string.todo);
-        if (pos == 2) return getString(R.string.quicknote);
-        if (pos == 3) return getString(R.string.more);
+        if (pos == TAB_INDEX_NOTEBOOK) return getFileBrowserTitle();
+        if (pos == TAB_INDEX_QUICK_NOTE) return getString(R.string.quicknote);
+        if (pos == TAB_INDEX_TODO) return getString(R.string.todo);
+        if (pos == TAB_INDEX_MORE) return getString(R.string.more);
         return "";
     }
 
     public GsFragmentBase<?, ?> getPosFrament(final int pos) {
-        if (pos == 0) return _notebook;
-        if (pos == 1) return _todo;
-        if (pos == 2) return _quicknote;
-        if (pos == 3) return _more;
+        if (pos == TAB_INDEX_NOTEBOOK) return _notebook;
+        if (pos == TAB_INDEX_QUICK_NOTE) return _quicknote;
+        if (pos == TAB_INDEX_TODO) return _todo;
+        if (pos == TAB_INDEX_MORE) return _more;
         return null;
     }
 
     public void onViewPagerPageSelected(int pos) {
         _bottomNav.getMenu().getItem(pos).setChecked(true);
+        setTitle(getPosTitle(pos));
 
         if (pos == tabIdToPos(R.id.nav_notebook)) {
             _fab.show();
         } else {
             _fab.hide();
         }
-        setTitle(getPosTitle(pos));
 
         if (pos != tabIdToPos(R.id.nav_notebook)) {
             restoreDefaultToolbar();

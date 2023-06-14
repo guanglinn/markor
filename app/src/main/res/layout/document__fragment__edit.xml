@@ -9,6 +9,7 @@
 #########################################################*/
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -18,55 +19,85 @@
     tools:context="net.gsantner.markor.activity.DocumentEditAndViewFragment"
     tools:showIn="@layout/document__activity">
 
-    <net.gsantner.markor.frontend.DraggableScrollbarScrollView
-        android:id="@+id/document__fragment__edit__content_editor__scrolling_parent"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginBottom="@dimen/textactions_bar_height"
-        android:background="@android:color/transparent"
-        android:fillViewport="true">
+        android:layout_height="match_parent">
 
-        <net.gsantner.markor.frontend.textview.HighlightingEditor
-            android:id="@+id/document__fragment__edit__highlighting_editor"
+        <net.gsantner.markor.frontend.DraggableScrollbarScrollView
+            android:id="@+id/document__fragment__edit__content_editor__scrolling_parent"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
+            android:background="@android:color/transparent"
+            android:fillViewport="true"
+            app:layout_constraintBottom_toTopOf="@+id/document__fragment__edit__text_bottom_bar"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <net.gsantner.markor.frontend.textview.HighlightingEditor
+                android:id="@+id/document__fragment__edit__highlighting_editor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/background"
+                android:gravity="top"
+                android:imeOptions="flagNoExtractUi"
+                android:inputType="textMultiLine|textCapSentences"
+                android:minHeight="1dp"
+                android:paddingLeft="@dimen/activity_horizontal_margin"
+                android:paddingTop="@dimen/activity_vertical_margin"
+                android:paddingRight="@dimen/activity_horizontal_margin"
+                android:paddingBottom="@dimen/editor_bottom_margin"
+                android:scrollbars="none"
+                android:textCursorDrawable="@drawable/cursor_accent" />
+        </net.gsantner.markor.frontend.DraggableScrollbarScrollView>
+
+        <net.gsantner.markor.web.DraggableScrollbarWebView
+            android:id="@+id/document__fragment_view_webview"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:background="@color/background"
-            android:minHeight="1dp"
-            android:gravity="top"
-            android:imeOptions="flagNoExtractUi"
-            android:inputType="textMultiLine|textCapSentences"
-            android:paddingLeft="@dimen/activity_horizontal_margin"
-            android:paddingTop="@dimen/activity_vertical_margin"
-            android:paddingRight="@dimen/activity_horizontal_margin"
-            android:paddingBottom="@dimen/editor_bottom_margin"
-            android:scrollbars="none"
-            android:textCursorDrawable="@drawable/cursor_accent" />
-
-    </net.gsantner.markor.frontend.DraggableScrollbarScrollView>
-
-    <HorizontalScrollView
-        android:id="@+id/document__fragment__edit__text_actions_bar__scrolling_parent"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/textactions_bar_height"
-        android:layout_gravity="bottom"
-        android:background="@color/textActionBarColor"
-        android:paddingTop="4dp">
+            android:fillViewport="true"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@+id/document__fragment__edit__text_bottom_bar"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <LinearLayout
-            android:id="@+id/document__fragment__edit__text_actions_bar"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:background="@color/textActionBarColor"
-            android:orientation="horizontal" />
-    </HorizontalScrollView>
+            android:id="@+id/document__fragment__edit__text_bottom_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
 
-    <net.gsantner.markor.web.DraggableScrollbarWebView
-        android:id="@+id/document__fragment_view_webview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/background"
-        android:layout_marginBottom="@dimen/textactions_bar_height"
-        android:visibility="gone" />
+            <HorizontalScrollView
+                android:id="@+id/document__fragment__edit__text_actions_bar__scrolling_parent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:background="@color/textActionBarColor">
+
+                <LinearLayout
+                    android:id="@+id/document__fragment__edit__text_actions_bar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <HorizontalScrollView
+                android:id="@+id/document__fragment__edit__text_actions_bar__scrolling_parent2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:background="@color/textActionBarColor">
+
+                <LinearLayout
+                    android:id="@+id/document__fragment__edit__text_actions_bar2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <FrameLayout
         android:id="@+id/document__fragment_fullscreen_overlay"

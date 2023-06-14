@@ -24,7 +24,7 @@
             android:layout_gravity="center_vertical"
             android:ellipsize="end"
             android:lines="1"
-            android:text="@string/search_and_replace"
+            android:text="@string/replace"
             android:textAppearance="@style/TextAppearance.AppCompat.Title" />
 
         <RelativeLayout
@@ -40,7 +40,7 @@
                 android:layout_alignParentLeft="true"
                 android:layout_toStartOf="@+id/recent_show_spinner"
                 android:layout_toLeftOf="@+id/recent_show_spinner"
-                android:hint="@string/search_for"
+                android:hint="@string/content"
                 android:importantForAutofill="no"
                 android:inputType="textFilter"
                 tools:targetApi="o" />

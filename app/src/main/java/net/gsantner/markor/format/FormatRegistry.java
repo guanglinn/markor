@@ -31,7 +31,6 @@ import net.gsantner.markor.format.plaintext.PlaintextActionButtons;
 import net.gsantner.markor.format.plaintext.PlaintextSyntaxHighlighter;
 import net.gsantner.markor.format.plaintext.PlaintextTextConverter;
 import net.gsantner.markor.format.todotxt.TodoTxtActionButtons;
-import net.gsantner.markor.format.todotxt.TodoTxtAutoTextFormatter;
 import net.gsantner.markor.format.todotxt.TodoTxtSyntaxHighlighter;
 import net.gsantner.markor.format.todotxt.TodoTxtTextConverter;
 import net.gsantner.markor.format.wikitext.WikitextActionButtons;
@@ -136,7 +135,8 @@ public class FormatRegistry {
                 format._converter = CONVERTER_TODOTXT;
                 format._highlighter = new TodoTxtSyntaxHighlighter(appSettings);
                 format._textActions = new TodoTxtActionButtons(context, document);
-                format._autoFormatInputFilter = new TodoTxtAutoTextFormatter();
+                // >< Comment to disable auto-add date for new line
+                // format._autoFormatInputFilter = new TodoTxtAutoTextFormatter();
                 break;
             }
             case FORMAT_KEYVALUE: {

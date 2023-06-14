@@ -9,20 +9,24 @@ package net.gsantner.markor.format;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.text.Editable;
-import android.text.Selection;
 import android.text.TextUtils;
 import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
@@ -49,6 +53,7 @@ import net.gsantner.opoc.format.GsTextUtils;
 import net.gsantner.opoc.util.GsFileUtils;
 import net.gsantner.opoc.wrapper.GsCallback;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -246,18 +251,38 @@ public abstract class ActionButtonBase {
         return prefKeys;
     }
 
-    @SuppressWarnings("ConstantConditions")
-    public void recreateActionButtons(ViewGroup barLayout, ActionItem.DisplayMode displayMode) {
-        barLayout.removeAllViews();
-        setBarVisible(barLayout, true);
-
+    public void recreateActionButtons(ArrayList<ViewGroup> _textActionsBars, ActionItem.DisplayMode displayMode) {
         final Map<String, ActionItem> map = getActiveActionMap();
         final List<String> orderedKeys = getActionOrder();
         final Set<String> disabledKeys = new HashSet<>(getDisabledActions());
-        for (final String key : orderedKeys) {
-            final ActionItem action = map.get(key);
-            if (!disabledKeys.contains(key) && (action.displayMode == displayMode || action.displayMode == ActionItem.DisplayMode.ANY)) {
-                appendActionButtonToBar(barLayout, action);
+
+        int keyIndex = 0;
+        int middleIndex = orderedKeys.size(); // Decide to use the next actions bar
+        if (orderedKeys.size() > 11) {
+            middleIndex = (orderedKeys.size() - 1) / 2;
+        }
+
+        for (int barIndex = 0; barIndex < _textActionsBars.size(); barIndex++) {
+            ViewGroup barLayout = _textActionsBars.get(barIndex);
+            if (keyIndex + 1 > orderedKeys.size()) {
+                setBarVisible(barLayout, false); // Hide unused actions bar
+                continue;
+            } else {
+                barLayout.removeAllViews();
+                for (; keyIndex < orderedKeys.size(); keyIndex++) {
+                    String key = orderedKeys.get(keyIndex);
+                    final ActionItem action = map.get(key);
+                    if (disabledKeys.contains(key)) {
+                        continue;
+                    } else if (action.displayMode == displayMode || action.displayMode == ActionItem.DisplayMode.ANY) {
+                        appendActionButtonToBar(barLayout, action);
+                        if (keyIndex + 1 == middleIndex) {
+                            keyIndex++;
+                            break; // Wrap line
+                        }
+                    }
+                }
+                setBarVisible(barLayout, true); // Show actions bar
             }
         }
     }
@@ -271,7 +296,7 @@ public abstract class ActionButtonBase {
 
         btn.setOnClickListener(v -> {
             try {
-                // run action
+                // Run action
                 v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
                 onActionClick(action.keyId);
             } catch (Exception ex) {
@@ -290,11 +315,28 @@ public abstract class ActionButtonBase {
         final int sidePadding = _buttonHorizontalMargin + btn.getPaddingLeft(); // Left and right are symmetrical
         btn.setPadding(sidePadding, btn.getPaddingTop(), sidePadding, btn.getPaddingBottom());
         barLayout.addView(btn);
+        // >
+        /**
+         int w = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+         int h = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+         btn.measure(w, h);
+         int width = btn.getMeasuredWidth();
+         return width;
+         */
+        // <
     }
 
     protected void setBarVisible(ViewGroup barLayout, boolean visible) {
-        if (barLayout.getId() == R.id.document__fragment__edit__text_actions_bar && barLayout.getParent() instanceof HorizontalScrollView) {
-            ((HorizontalScrollView) barLayout.getParent()).setVisibility(visible ? View.VISIBLE : View.GONE);
+        // barLayout.getId() == R.id.document__fragment__edit__text_actions_bar
+        if (barLayout.getParent() instanceof HorizontalScrollView) {
+            HorizontalScrollView scrollView = ((HorizontalScrollView) barLayout.getParent());
+            if (visible) {
+                if (scrollView.getVisibility() == View.GONE || scrollView.getVisibility() == View.INVISIBLE) {
+                    scrollView.setVisibility(View.VISIBLE);
+                }
+            } else if (scrollView.getVisibility() == View.VISIBLE) {
+                scrollView.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -324,8 +366,7 @@ public abstract class ActionButtonBase {
                 // Replace action with replacement
                 new ReplacePattern(patternIndent + escapedAction, replaceIndent + replacement),
                 // Replace replacement or nothing with action
-                new ReplacePattern(patternIndent + escapedReplace, replaceIndent + action),
-        };
+                new ReplacePattern(patternIndent + escapedReplace, replaceIndent + action),};
 
         runRegexReplaceAction(Arrays.asList(patterns));
     }
@@ -393,20 +434,16 @@ public abstract class ActionButtonBase {
      */
     public static void runRegexReplaceAction(final EditText editor, final List<ReplacePattern> patterns) {
         if (editor instanceof HighlightingEditor) {
-            ((HighlightingEditor) editor).withAutoFormatDisabled(() -> runRegexReplaceAction(editor.getText(), patterns));
+            ((HighlightingEditor) editor).withAutoFormatDisabled(() -> _runRegexReplaceAction(editor, patterns));
         } else {
-            runRegexReplaceAction(editor.getText(), patterns);
+            _runRegexReplaceAction(editor, patterns);
         }
     }
 
-    public static void runRegexReplaceAction(final Editable editable, final ReplacePattern... patterns) {
-        runRegexReplaceAction(editable, Arrays.asList(patterns));
-    }
+    private static void _runRegexReplaceAction(final EditText editor, final List<ReplacePattern> patterns) {
 
-    private static void runRegexReplaceAction(final Editable editable, final List<ReplacePattern> patterns) {
-
-        final int[] sel = TextViewUtils.getSelection(editable);
-        final TextViewUtils.ChunkedEditable text = TextViewUtils.ChunkedEditable.wrap(editable);
+        final int[] sel = TextViewUtils.getSelection(editor);
+        final TextViewUtils.ChunkedEditable text = TextViewUtils.ChunkedEditable.wrap(editor.getText());
 
         // Offset of selection start from text end - used to restore selection
         final int selEndOffset = text.length() - sel[1];
@@ -441,7 +478,7 @@ public abstract class ActionButtonBase {
 
         final int newSelEnd = text.length() - selEndOffset;
         final int newSelStart = sel[0] == sel[1] ? newSelEnd : TextViewUtils.getLineEnd(text, selStartStart) - selStartOffset;
-        Selection.setSelection(editable, newSelStart, newSelEnd);
+        editor.setSelection(newSelStart, newSelEnd);
     }
 
     protected void runInlineAction(String _action) {
@@ -454,26 +491,17 @@ public abstract class ActionButtonBase {
             int selectionEnd = _hlEditor.getSelectionEnd();
 
             //Check if Selection includes the shortcut characters
-            if (selectionEnd < text.length() && selectionStart >= 0 && (text.substring(selectionStart, selectionEnd)
-                    .matches("(\\*\\*|~~|_|`)[a-zA-Z0-9\\s]*(\\*\\*|~~|_|`)"))) {
+            if (selectionEnd < text.length() && selectionStart >= 0 && (text.substring(selectionStart, selectionEnd).matches("(\\*\\*|~~|_|`)[a-zA-Z0-9\\s]*(\\*\\*|~~|_|`)"))) {
 
-                text = text.substring(selectionStart + _action.length(),
-                        selectionEnd - _action.length());
-                _hlEditor.getText()
-                        .replace(selectionStart, selectionEnd, text);
+                text = text.substring(selectionStart + _action.length(), selectionEnd - _action.length());
+                _hlEditor.getText().replace(selectionStart, selectionEnd, text);
 
             }
             //Check if Selection is Preceded and succeeded by shortcut characters
-            else if (((selectionEnd <= (_hlEditor.length() - _action.length())) &&
-                    (selectionStart >= _action.length())) &&
-                    (text.substring(selectionStart - _action.length(),
-                                    selectionEnd + _action.length())
-                            .matches("(\\*\\*|~~|_|`)[a-zA-Z0-9\\s]*(\\*\\*|~~|_|`)"))) {
+            else if (((selectionEnd <= (_hlEditor.length() - _action.length())) && (selectionStart >= _action.length())) && (text.substring(selectionStart - _action.length(), selectionEnd + _action.length()).matches("(\\*\\*|~~|_|`)[a-zA-Z0-9\\s]*(\\*\\*|~~|_|`)"))) {
 
                 text = text.substring(selectionStart, selectionEnd);
-                _hlEditor.getText()
-                        .replace(selectionStart - _action.length(),
-                                selectionEnd + _action.length(), text);
+                _hlEditor.getText().replace(selectionStart - _action.length(), selectionEnd + _action.length(), text);
 
             }
             //Condition to insert shortcut preceding and succeeding the selection
@@ -490,13 +518,11 @@ public abstract class ActionButtonBase {
                 _hlEditor.getText().insert(_hlEditor.getSelectionStart(), _action);
             } else {
                 // Condition for formatting which is inserted on either side of the cursor
-                _hlEditor.getText().insert(_hlEditor.getSelectionStart(), _action)
-                        .insert(_hlEditor.getSelectionEnd(), _action);
+                _hlEditor.getText().insert(_hlEditor.getSelectionStart(), _action).insert(_hlEditor.getSelectionEnd(), _action);
                 _hlEditor.setSelection(_hlEditor.getSelectionStart() - _action.length());
             }
         }
     }
-
 
     public ActionButtonBase setUiReferences(@Nullable final Activity activity, @Nullable final HighlightingEditor hlEditor, @Nullable final WebView webview) {
         m_activity = activity;
@@ -568,7 +594,7 @@ public abstract class ActionButtonBase {
 
             }
             case R.string.abid_common_accordion: {
-                _hlEditor.insertOrReplaceTextOnCursor("<details markdown='1'><summary>" + rstr(R.string.expand_collapse) + "</summary>\n" + HighlightingEditor.PLACE_CURSOR_HERE_TOKEN + "\n\n</details>");
+                _hlEditor.insertOrReplaceTextOnCursor("<details markdown='1'>\n<summary>" + rstr(R.string.expand_collapse) + "</summary>\n" + HighlightingEditor.PLACE_CURSOR_HERE_TOKEN + "\n</details>");
                 return true;
             }
             case R.string.abid_common_attach_something: {
@@ -618,13 +644,11 @@ public abstract class ActionButtonBase {
                 return true;
             }
             case R.string.abid_common_open_link_browser: {
-                String url;
-                if ((url = GsTextUtils.tryExtractUrlAroundPos(_hlEditor.getText().toString(), _hlEditor.getSelectionStart())) != null) {
-                    if (url.endsWith(")")) {
-                        url = url.substring(0, url.length() - 1);
-                    }
+                String url = GsTextUtils.tryExtractUrlAroundPos(_hlEditor.getText().toString(), _hlEditor.getSelectionStart());
+                if (url != null) {
                     getCu().openWebpageInExternalBrowser(getContext(), url);
                 }
+
                 return true;
             }
             case R.string.abid_common_special_key: {
@@ -650,7 +674,60 @@ public abstract class ActionButtonBase {
                 return true;
             }
             case R.string.abid_common_web_jump_to_table_of_contents: {
-                m_webView.loadUrl("javascript:document.getElementsByClassName('toc')[0].scrollIntoView();");
+                // m_webView.loadUrl("javascript:document.getElementsByClassName('toc')[0].scrollIntoView();");
+                String script = "javascript:";
+                try {
+                    script += GsFileUtils.readCloseTextStream(m_activity.getAssets().open("js/generate-catalog.js"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                m_webView.loadUrl(script);
+                m_webView.evaluateJavascript("javascript: getCatalogHtml()", new ValueCallback<String>() {
+                    @Override
+                    public void onReceiveValue(String value) {
+                        if (value.length() < 3) {
+                            Toast.makeText(m_activity, R.string.no_catalog_defined, Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        value = value.replaceAll("\\\\u003C", "<");
+                        value = value.replaceAll("\\\\", "");
+                        value = value.substring(1, value.length() - 2);
+
+                        WebView webView = new WebView(getContext());
+                        webView.getSettings().setJavaScriptEnabled(true);
+                        // JavaScript call Java
+                        webView.addJavascriptInterface(new Object() {
+                            @JavascriptInterface
+                            public void run(String param) {
+                                m_activity.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        m_webView.loadUrl("javascript:document.getElementById('" + param.substring(1) + "').scrollIntoView();");
+                                    }
+                                });
+                            }
+                        }, "injectedObject");
+                        webView.loadDataWithBaseURL(null, value, "text/html;charset=utf-8", "utf-8", null);
+
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                        builder.setTitle(R.string.catalog);
+                        builder.setView(webView);
+                        builder.setNegativeButton(R.string.close, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                // User cancelled the dialog
+                            }
+                        });
+                        AlertDialog dialog = builder.create();
+                        dialog.show();
+
+                        WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
+                        int screenHeight = m_activity.getResources().getDisplayMetrics().heightPixels;
+                        // screenHeight = m_activity.getWindowManager().getCurrentWindowMetrics().getBounds().height();
+                        params.height = (int) (screenHeight * 0.8);
+                        dialog.getWindow().setAttributes(params);
+                    }
+                });
                 return true;
             }
             case R.string.abid_common_view_file_in_other_app: {
@@ -678,16 +755,13 @@ public abstract class ActionButtonBase {
                 });
                 return true;
             }
-            case R.string.abid_common_open_link_browser: {
-                return onSearch();
-            }
             case R.string.abid_common_special_key: {
                 runJumpBottomTopAction(ActionItem.DisplayMode.EDIT);
                 return true;
             }
             case R.string.abid_common_time: {
                 try {
-                    _hlEditor.insertOrReplaceTextOnCursor(DatetimeFormatDialog.getMostRecentDate(getContext()));
+                    _hlEditor.insertOrReplaceTextOnCursor(DatetimeFormatDialog.getRecentDate(getContext()));
                 } catch (Exception ignored) {
                 }
                 return true;
@@ -757,9 +831,7 @@ public abstract class ActionButtonBase {
             selStart[0] += isUp ? -1 : 1;
             selEnd[0] += isUp ? -1 : 1;
 
-            hlEditor.setSelection(
-                    TextViewUtils.getIndexFromLineOffset(text, selStart),
-                    TextViewUtils.getIndexFromLineOffset(text, selEnd));
+            hlEditor.setSelection(TextViewUtils.getIndexFromLineOffset(text, selStart), TextViewUtils.getIndexFromLineOffset(text, selEnd));
         }
     }
 
@@ -804,28 +876,16 @@ public abstract class ActionButtonBase {
                 _hlEditor.simulateKeyPress(KeyEvent.KEYCODE_MOVE_END);
             } else if (callbackPayload.equals(rstr(R.string.key_pos_1_document))) {
                 _hlEditor.setSelection(0);
-            } else if (callbackPayload.equals(rstr(R.string.move_text_one_line_up))) {
-                ActionButtonBase.moveLineSelectionBy1(_hlEditor, true);
-            } else if (callbackPayload.equals(rstr(R.string.move_text_one_line_down))) {
-                ActionButtonBase.moveLineSelectionBy1(_hlEditor, false);
             } else if (callbackPayload.equals(rstr(R.string.key_pos_end_document))) {
                 _hlEditor.setSelection(_hlEditor.length());
-            } else if (callbackPayload.equals(rstr(R.string.key_ctrl_a))) {
-                _hlEditor.setSelection(0, _hlEditor.length());
             } else if (callbackPayload.equals(rstr(R.string.key_tab))) {
                 _hlEditor.insertOrReplaceTextOnCursor("\u0009");
             } else if (callbackPayload.equals(rstr(R.string.zero_width_space))) {
                 _hlEditor.insertOrReplaceTextOnCursor("\u200B");
-            } else if (callbackPayload.equals(rstr(R.string.search))) {
-                onSearch();
             } else if (callbackPayload.equals(rstr(R.string.break_page_pdf_print))) {
                 _hlEditor.insertOrReplaceTextOnCursor("<div style='page-break-after:always;'></div>");
             } else if (callbackPayload.equals(rstr(R.string.ohm))) {
                 _hlEditor.insertOrReplaceTextOnCursor("Ω");
-            } else if (callbackPayload.equals(rstr(R.string.continued_overline))) {
-                _hlEditor.insertOrReplaceTextOnCursor("‾‾‾‾‾");
-            } else if (callbackPayload.equals(rstr(R.string.shrug))) {
-                _hlEditor.insertOrReplaceTextOnCursor("¯\\_(ツ)_/¯");
             } else if (callbackPayload.equals(rstr(R.string.char_punctation_mark_arrows))) {
                 _hlEditor.insertOrReplaceTextOnCursor("»«");
             } else if (callbackPayload.equals(rstr(R.string.select_current_line))) {
@@ -838,38 +898,30 @@ public abstract class ActionButtonBase {
         MarkorDialogFactory.showColorSelectionModeDialog(getActivity(), new GsCallback.a1<Integer>() {
             @Override
             public void callback(Integer colorInsertType) {
-                ColorPickerDialogBuilder
-                        .with(_hlEditor.getContext())
-                        .setTitle(R.string.color)
-                        .wheelType(ColorPickerView.WHEEL_TYPE.FLOWER)
-                        .density(12)
-                        .setPositiveButton(android.R.string.ok, new ColorPickerClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int selectedColor, Integer[] allColors) {
-                                String hex = Utils.getHexString(selectedColor, false).toLowerCase();
-                                int pos = _hlEditor.getSelectionStart();
-                                switch (colorInsertType) {
-                                    case R.string.hexcode: {
-                                        _hlEditor.getText().insert(pos, hex);
-                                        break;
-                                    }
-                                    case R.string.foreground: {
-                                        _hlEditor.getText().insert(pos, "<span style='color:" + hex + ";'></span>");
-                                        _hlEditor.setSelection(_hlEditor.getSelectionStart() - 7);
-                                        break;
-                                    }
-                                    case R.string.background: {
-                                        _hlEditor.getText().insert(pos, "<span style='background-color:" + hex + ";'></span>");
-                                        _hlEditor.setSelection(_hlEditor.getSelectionStart() - 7);
-                                        break;
-                                    }
-                                }
-
+                ColorPickerDialogBuilder.with(_hlEditor.getContext()).setTitle(R.string.color).wheelType(ColorPickerView.WHEEL_TYPE.FLOWER).density(12).setPositiveButton(android.R.string.ok, new ColorPickerClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int selectedColor, Integer[] allColors) {
+                        String hex = Utils.getHexString(selectedColor, false).toLowerCase();
+                        int pos = _hlEditor.getSelectionStart();
+                        switch (colorInsertType) {
+                            case R.string.hexcode: {
+                                _hlEditor.getText().insert(pos, hex);
+                                break;
                             }
-                        })
-                        .setNegativeButton(R.string.cancel, null)
-                        .build()
-                        .show();
+                            case R.string.foreground: {
+                                _hlEditor.getText().insert(pos, "<span style='color:" + hex + ";'></span>");
+                                _hlEditor.setSelection(_hlEditor.getSelectionStart() - 7);
+                                break;
+                            }
+                            case R.string.background: {
+                                _hlEditor.getText().insert(pos, "<span style='background-color:" + hex + ";'></span>");
+                                _hlEditor.setSelection(_hlEditor.getSelectionStart() - 7);
+                                break;
+                            }
+                        }
+
+                    }
+                }).setNegativeButton(R.string.cancel, null).build().show();
             }
         });
     }
@@ -879,11 +931,11 @@ public abstract class ActionButtonBase {
             int pos = _hlEditor.getSelectionStart();
             _hlEditor.setSelection(pos == 0 ? _hlEditor.getText().length() : 0);
         } else if (displayMode == ActionItem.DisplayMode.VIEW) {
-            boolean top = m_webView.getScrollY() > 100;
-            m_webView.scrollTo(0, top ? 0 : m_webView.getContentHeight());
-            if (!top) {
-                m_webView.scrollBy(0, 1000);
-                m_webView.scrollBy(0, 1000);
+            int bottom = (int) (m_webView.getContentHeight() * m_webView.getScale());
+            if (m_webView.getScrollY() < bottom - 100) {
+                m_webView.scrollTo(0, bottom);
+            } else {
+                m_webView.scrollTo(0, 0);
             }
         }
     }

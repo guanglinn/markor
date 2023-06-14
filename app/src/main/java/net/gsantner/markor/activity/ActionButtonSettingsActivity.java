@@ -52,6 +52,7 @@ public class ActionButtonSettingsActivity extends MarkorBaseActivity {
     private List<ActionButtonBase.ActionItem> _actions;
     private ActionButtonBase _textActions;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,7 +69,12 @@ public class ActionButtonSettingsActivity extends MarkorBaseActivity {
         recycler.setLayoutManager(new LinearLayoutManager(this));
         recycler.addItemDecoration(new DividerItemDecoration(recycler.getContext(), DividerItemDecoration.VERTICAL));
 
+        /**
+         * _keys <- _textActions.getActionOrder();
+         * _disabled <- _textActions.getDisabledActions();
+         */
         extractActionData();
+
         _adapter = new OrderAdapter(_actions, _keys, _disabled);
 
         final ItemTouchHelper.Callback callback = new ReorderCallback(_adapter);
@@ -103,6 +109,7 @@ public class ActionButtonSettingsActivity extends MarkorBaseActivity {
                     _adapter.order.set(i, _keys.indexOf(key));
                 }
                 _adapter.notifyDataSetChanged();
+                // >! Settings changed
                 return true;
             }
         }
@@ -116,8 +123,25 @@ public class ActionButtonSettingsActivity extends MarkorBaseActivity {
             reorderedKeys.add(_keys.get(i));
         }
 
-        _textActions.saveActionOrder(reorderedKeys);
-        _textActions.saveDisabledActions(new ArrayList<>(_adapter._disabled));
+        // reorderedKeys is new order
+        // _adapter._disabled is new disabled
+        boolean orderEqual = reorderedKeys.equals(_keys);
+        boolean disableEqual = _adapter._disabled.equals(new HashSet<>(_disabled));
+        if (orderEqual) {
+            System.err.println("##ActionButtons Order: No Changed");
+        } else {
+            System.err.println("##ActionButtons Order: Changed");
+            // >! Save settings
+            _textActions.saveActionOrder(reorderedKeys);
+        }
+
+        if (disableEqual) {
+            System.err.println("##ActionButtons Disable: No Changed");
+        } else {
+            System.err.println("##ActionButtons Disable: Changed");
+            // >! Save settings
+            _textActions.saveDisabledActions(new ArrayList<>(_adapter._disabled));
+        }
     }
 
     @Override
@@ -128,6 +152,7 @@ public class ActionButtonSettingsActivity extends MarkorBaseActivity {
 
     @SuppressWarnings("ConstantConditions")
     private void extractActionData() {
+        // >! What document type for settings
         final int documentType = getIntent().getExtras().getInt(EXTRA_FORMAT_KEY);
 
         if (documentType == R.string.pref_key__markdown__reorder_actions) {
@@ -138,7 +163,8 @@ public class ActionButtonSettingsActivity extends MarkorBaseActivity {
             _textActions = new WikitextActionButtons(this, null);
         } else if (documentType == R.string.pref_key__asciidoc__reorder_actions) {
             _textActions = new AsciidocActionButtons(this, null);
-        } else { // Default to Plaintext
+        } else {
+            // Default to Plaintext
             _textActions = new PlaintextActionButtons(this, null);
         }
 
@@ -163,24 +189,23 @@ public class ActionButtonSettingsActivity extends MarkorBaseActivity {
         private void bindModel(final ActionButtonBase.ActionItem action, final String key, final Set<String> disabled) {
             final SwitchCompat enabled = _row.findViewById(R.id.enabled_switch);
             enabled.setOnCheckedChangeListener(null);
-
             enabled.setChecked(!disabled.contains(key));
+
+            // >! Listen to Switch
             enabled.setOnCheckedChangeListener((button, isChecked) -> {
                 if (isChecked) {
                     disabled.remove(key);
                 } else {
                     disabled.add(key);
                 }
+                // >! Item disable state changed
             });
 
             ((ImageView) _row.findViewById(R.id.action_icon)).setImageResource(action.iconId);
             ((TextView) _row.findViewById(R.id.action_text)).setText(action.stringId);
 
-            _row.findViewById(R.id.is_edit_mode_action).setVisibility(
-                    action.displayMode == DisplayMode.ANY || action.displayMode == DisplayMode.EDIT ? View.VISIBLE : View.INVISIBLE);
-
-            _row.findViewById(R.id.is_view_mode_action).setVisibility(
-                    action.displayMode == DisplayMode.ANY || action.displayMode == DisplayMode.VIEW ? View.VISIBLE : View.INVISIBLE);
+            _row.findViewById(R.id.is_edit_mode_action).setVisibility(action.displayMode == DisplayMode.ANY || action.displayMode == DisplayMode.EDIT ? View.VISIBLE : View.INVISIBLE);
+            _row.findViewById(R.id.is_view_mode_action).setVisibility(action.displayMode == DisplayMode.ANY || action.displayMode == DisplayMode.VIEW ? View.VISIBLE : View.INVISIBLE);
         }
 
         public void setHighlight() {
@@ -245,6 +270,7 @@ public class ActionButtonSettingsActivity extends MarkorBaseActivity {
             _adapter.order.remove(from);
             _adapter.order.add(to, value);
             _adapter.notifyItemMoved(from, to);
+            // >! Order changed
 
             return true;
         }

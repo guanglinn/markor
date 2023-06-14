@@ -27,6 +27,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,7 +40,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import net.gsantner.markor.ApplicationObject;
 import net.gsantner.markor.R;
-import net.gsantner.markor.format.ActionButtonBase;
 import net.gsantner.markor.format.FormatRegistry;
 import net.gsantner.markor.frontend.FileInfoDialog;
 import net.gsantner.markor.frontend.MarkorDialogFactory;
@@ -90,6 +90,11 @@ public class GsFileBrowserFragment extends GsFragmentBase<GsSharedPreferencesPro
     private Menu _fragmentMenu;
     private MarkorContextUtils _cu;
 
+    // >
+    ImageView topNavClose;
+    TextView topNavSubTitle;
+    // <
+
     //########################
     //## Methods
     //########################
@@ -101,10 +106,11 @@ public class GsFileBrowserFragment extends GsFragmentBase<GsSharedPreferencesPro
     @Override
     public void onViewCreated(@NonNull View root, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(root, savedInstanceState);
-        Context context = getContext();
         _recyclerList = root.findViewById(R.id.ui__filesystem_dialog__list);
         swipe = root.findViewById(R.id.pull_to_refresh);
         _emptyHint = root.findViewById(R.id.empty_hint);
+        topNavClose = getActivity().findViewById(R.id.top_nav_close);
+        topNavSubTitle = getActivity().findViewById(R.id.top_nav_sub_title);
 
         _appSettings = ApplicationObject.settings();
         _cu = new MarkorContextUtils(root.getContext());
@@ -119,14 +125,22 @@ public class GsFileBrowserFragment extends GsFragmentBase<GsSharedPreferencesPro
         _recyclerList.addItemDecoration(dividerItemDecoration);
         _previousNotebookDirectory = _appSettings.getNotebookDirectory();
 
-        _filesystemViewerAdapter = new GsFileBrowserListAdapter(_dopt, context, _recyclerList);
+        _filesystemViewerAdapter = new GsFileBrowserListAdapter(_dopt, getContext(), _recyclerList);
         _recyclerList.setAdapter(_filesystemViewerAdapter);
         _filesystemViewerAdapter.getFilter().filter("");
         onFsViewerDoUiUpdate(_filesystemViewerAdapter);
 
         swipe.setOnRefreshListener(() -> {
+            _filesystemViewerAdapter.unselectAll(); // ><
             _filesystemViewerAdapter.reloadCurrentFolder();
             swipe.setRefreshing(false);
+        });
+
+        topNavClose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                _filesystemViewerAdapter.unselectAll();
+            }
         });
 
         if (FileSearchEngine.isSearchExecuting.get()) {
@@ -165,7 +179,6 @@ public class GsFileBrowserFragment extends GsFragmentBase<GsSharedPreferencesPro
                 onFsViewerNothingSelected(_dopt.requestId);
                 break;
             }
-
         }
     }
 
@@ -174,7 +187,6 @@ public class GsFileBrowserFragment extends GsFragmentBase<GsSharedPreferencesPro
             _dopt.okButtonEnable = false;
         }
     }
-
 
     @Override
     public void onFsViewerSelected(String request, File file, final Integer lineNumber) {
@@ -209,6 +221,22 @@ public class GsFileBrowserFragment extends GsFragmentBase<GsSharedPreferencesPro
         if (_callback != null) {
             _callback.onFsViewerDoUiUpdate(adapter);
         }
+        // >
+        int selectionCount = _filesystemViewerAdapter.getCurrentSelection().size();
+        if (selectionCount > 0) {
+            topNavSubTitle.setText(getResources().getString(R.string.selected) + " " + selectionCount);
+            if (topNavSubTitle.getVisibility() != View.VISIBLE) {
+                topNavSubTitle.setVisibility(View.VISIBLE);
+            }
+            if (topNavClose.getVisibility() != View.VISIBLE) {
+                topNavClose.setVisibility(View.VISIBLE);
+            }
+        } else {
+            topNavSubTitle.setText("");
+            topNavSubTitle.setVisibility(View.GONE);
+            topNavClose.setVisibility(View.GONE);
+        }
+        // <
 
         updateMenuItems();
         _emptyHint.postDelayed(() -> _emptyHint.setVisibility(adapter.isCurrentFolderEmpty() ? View.VISIBLE : View.GONE), 200);
@@ -257,6 +285,9 @@ public class GsFileBrowserFragment extends GsFragmentBase<GsSharedPreferencesPro
             _fragmentMenu.findItem(R.id.action_favourite_remove).setVisible(selMulti1 && isFavourite);
             _fragmentMenu.findItem(R.id.action_fs_copy_to_clipboard).setVisible(selMulti1 && selTextFilesOnly);
             _fragmentMenu.findItem(R.id.action_create_shortcut).setVisible(selMulti1 && (selFilesOnly || selDirectoriesOnly));
+            // >
+            _fragmentMenu.findItem(R.id.action_check_all).setVisible((selMulti1 || selMultiMore) && selWritable && !_cu.isUnderStorageAccessFolder(getContext(), getCurrentFolder(), true));
+            // <
         }
     }
 
@@ -317,7 +348,6 @@ public class GsFileBrowserFragment extends GsFragmentBase<GsSharedPreferencesPro
         onFsViewerDoUiUpdate(_filesystemViewerAdapter);
         firstResume = false;
     }
-
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -468,6 +498,11 @@ public class GsFileBrowserFragment extends GsFragmentBase<GsSharedPreferencesPro
                 return true;
             }
 
+            case R.id.action_check_all: {
+                _filesystemViewerAdapter.selectAll();
+                return true;
+            }
+
             case R.id.action_share_files: {
                 MarkorContextUtils s = new MarkorContextUtils(getContext());
                 s.shareStreamMultiple(getContext(), _filesystemViewerAdapter.getCurrentSelection(), "*/*");
@@ -535,14 +570,18 @@ public class GsFileBrowserFragment extends GsFragmentBase<GsSharedPreferencesPro
         }
     }
 
-
-    ///////////////
+    //////////
     public void askForDeletingFilesRecursive(WrConfirmDialog.ConfirmDialogCallback confirmCallback) {
         final ArrayList<File> itemsToDelete = new ArrayList<>(_filesystemViewerAdapter.getCurrentSelection());
-        StringBuilder message = new StringBuilder(String.format(getString(R.string.do_you_really_want_to_delete_this_witharg), getResources().getQuantityString(R.plurals.documents, itemsToDelete.size())) + "\n\n");
+        StringBuilder message = new StringBuilder();
+        message.append(String.format(getString(R.string.do_you_really_want_to_delete_this_witharg), getResources().getQuantityString(R.plurals.documents, itemsToDelete.size())) + "\n");
 
-        for (File f : itemsToDelete) {
-            message.append("\n").append(f.getAbsolutePath());
+        if (itemsToDelete.size() < 7) {
+            for (File f : itemsToDelete) {
+                message.append("\n");
+                message.append(f.getAbsolutePath());
+                message.append("\n");
+            }
         }
 
         WrConfirmDialog confirmDialog = WrConfirmDialog.newInstance(getString(R.string.confirm_delete), message.toString(), itemsToDelete, confirmCallback);

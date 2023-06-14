@@ -23,7 +23,7 @@
             <item
                 android:id="@+id/action_attach_link"
                 android:icon="@drawable/ic_link_black_24dp"
-                android:title="@string/insert_link" />
+                android:title="@string/link" />
             <item
                 android:id="@+id/action_attach_file"
                 android:icon="@drawable/ic_file_white_24dp"
@@ -61,6 +61,12 @@
         app:showAsAction="always" />
 
     <item
+        android:id="@+id/action_save"
+        android:icon="@drawable/ic_save_black_24dp"
+        android:title="@string/save"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/action_preview_edit_toggle"
         android:icon="@drawable/ic_visibility_black_24dp"
         android:title="@string/view"
@@ -77,12 +83,6 @@
         android:id="@+id/action_edit"
         android:icon="@drawable/ic_edit_black_24dp"
         android:title="@string/edit_mode"
-        app:showAsAction="always" />
-
-    <item
-        android:id="@+id/action_save"
-        android:icon="@drawable/ic_save_black_24dp"
-        android:title="@string/save"
         app:showAsAction="always" />
 
     <item

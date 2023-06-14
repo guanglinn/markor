@@ -210,4 +210,10 @@
         android:title="@string/import_from_device"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/action_check_all"
+        android:icon="@drawable/ic_check_circle_24dp"
+        android:title="@string/select_all"
+        app:showAsAction="never" />
+
 </menu>

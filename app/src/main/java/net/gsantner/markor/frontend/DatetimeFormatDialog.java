@@ -14,7 +14,6 @@ import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
@@ -27,10 +26,8 @@ import android.widget.TextView;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.os.ConfigurationCompat;
 
-import net.gsantner.markor.ApplicationObject;
 import net.gsantner.markor.R;
 import net.gsantner.markor.frontend.textview.HighlightingEditor;
-import net.gsantner.markor.model.AppSettings;
 import net.gsantner.opoc.model.GsSharedPreferencesPropertyBackend;
 import net.gsantner.opoc.util.GsContextUtils;
 import net.gsantner.opoc.wrapper.GsCallback;
@@ -38,43 +35,29 @@ import net.gsantner.opoc.wrapper.GsCallback;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class DatetimeFormatDialog {
-    private static final String RECENT_FORMATS_STRING = "datetimformat_dialog__recent_formats_string_history";
-    private static final String RECENT_FORMATS_LENGTHS = "datetimformat_dialog__recent_formats_lengths_history";
-
-    private static final int MAX_RECENT_FORMATS = 5;
+    private static final String RECENT_FORMAT_STRING = "datetimformat_dialog__recent_format_string_history";
 
     private final static String[] PREDEFINED_DATE_TIME_FORMATS = {
             "hh:mm",
+            "HH:mm",
+            "hh:mm:ss",
+            "HH:mm:ss",
+            "yyyy/MM/dd",
+            "yyyy.MM.dd",
             "yyyy-MM-dd",
+            "dd/MM/yyyy",
             "dd.MM.yyyy",
             "dd-MM-yyyy",
             "MM/dd/yyyy",
-            "yyyy/MM/dd",
-            "MMM yyyy",
-            "hh:mm:ss",
-            "HH:mm:ss",
-            "dd hh:mm",
-            "dd-MM-yyyy hh:mm",
-            "dd-MM-yyyy hh:mm:ss.s",
-            "dd-MM-yyyy HH:mm",
-            "dd-MM-yyyy HH:mm:ss.s",
-            "dd-MM-yy",
-            "MM/dd/yy",
-            "dd.MM.yy",
-            "yy/MM/dd",
-            "dd hh:mm:ss",
-            "'[W'w']' EEEE, dd.MM.yyyy",
-            "'\\n[W'w']' EEEE, dd.MM.yyyy'\\n‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\\n'",
+            "'[Week 'w']' EEEE"
     };
 
     /**
@@ -87,7 +70,6 @@ public class DatetimeFormatDialog {
         final View viewRoot = activity.getLayoutInflater().inflate(R.layout.time_format_dialog, null);
 
         final GsContextUtils cu = new GsContextUtils();
-        final AppSettings appSettings = ApplicationObject.settings();
 
         final Locale locale = ConfigurationCompat.getLocales(activity.getResources().getConfiguration()).get(0);
 
@@ -98,7 +80,6 @@ public class DatetimeFormatDialog {
         final AtomicReference<Dialog> dialog = new AtomicReference<>();
         final AtomicReference<GsCallback.a1<String>> callbackInsertTextToEditor = new AtomicReference<>();
         final ListPopupWindow popupWindow = new ListPopupWindow(activity);
-        final TextView dateHeadline = viewRoot.findViewById(R.id.date_headline);
         final EditText formatEditText = viewRoot.findViewById(R.id.datetime_format_input);
         final TextView previewTextView = viewRoot.findViewById(R.id.formatted_example);
         final Button datePickButton = viewRoot.findViewById(R.id.start_datepicker_button);
@@ -106,8 +87,8 @@ public class DatetimeFormatDialog {
         final CheckBox formatInsteadCheckbox = viewRoot.findViewById(R.id.get_format_instead_date_or_time_checkbox);
         final CheckBox alwaysNowCheckBox = viewRoot.findViewById(R.id.always_use_current_datetime_checkbox);
 
-        final List<String> recentFormats = getRecentFormats(activity);
-        final List<String> allFormats = getAllFormats(recentFormats);
+        final String recentFormat = getRecentFormat(activity);
+        final List<String> allFormats = getAllFormats();
 
         // Popup window for ComboBox
         popupWindow.setAdapter(new SimpleAdapter(activity, createAdapterData(locale, allFormats),
@@ -153,16 +134,9 @@ public class DatetimeFormatDialog {
             }
         });
 
-        // Get most recent, falling back to lastusedformat if necessary
-        final String LAST_USED_PREF = DatetimeFormatDialog.class.getCanonicalName() + ".lastusedformat";
-        final String lastUsed = (recentFormats.size() > 0) ? recentFormats.get(0) : appSettings.getString(LAST_USED_PREF, "");
-
-        formatEditText.setText(lastUsed);
-        viewRoot.findViewById(R.id.time_format_last_used).setEnabled(recentFormats.size() > 0);
-        viewRoot.findViewById(R.id.time_format_last_used).setOnClickListener(b -> callbackInsertTextToEditor.get().callback(lastUsed));
+        formatEditText.setText(recentFormat);
         viewRoot.findViewById(R.id.time_format_just_date).setOnClickListener(b -> callbackInsertTextToEditor.get().callback(cu.getLocalizedDateFormat(activity)));
         viewRoot.findViewById(R.id.time_format_just_time).setOnClickListener(b -> callbackInsertTextToEditor.get().callback(cu.getLocalizedTimeFormat(activity)));
-        viewRoot.findViewById(R.id.time_format_yyyy_mm_dd).setOnClickListener(b -> callbackInsertTextToEditor.get().callback("yyyy-MM-dd"));
 
         // Pick Date Dialog
         datePickButton.setOnClickListener(button -> new DatePickerDialog(activity, (view, year, month, day) -> {
@@ -186,7 +160,6 @@ public class DatetimeFormatDialog {
             boolean dateChangeable = !formatInsteadCheckbox.isChecked() && !alwaysNowCheckBox.isChecked();
             timePickButton.setEnabled(dateChangeable);
             datePickButton.setEnabled(dateChangeable);
-            dateHeadline.setEnabled(!formatInsteadCheckbox.isChecked());
             alwaysNowCheckBox.setEnabled(!formatInsteadCheckbox.isChecked());
         };
         formatInsteadCheckbox.setOnClickListener(onOptionsChangedListener);
@@ -203,14 +176,15 @@ public class DatetimeFormatDialog {
         });
 
         // set builder and implement buttons to discard and submit
-        builder.setView(viewRoot)
-                .setNeutralButton(R.string.help, (dlgI, which) -> cu.openWebpageInExternalBrowser(activity, "https://developer.android.com/reference/java/text/SimpleDateFormat#date-and-time-patterns"))
-                .setNegativeButton(R.string.cancel, null)
-                .setPositiveButton(android.R.string.ok, (dlgI, which) -> {
-                    final String current = formatEditText.getText().toString();
-                    saveRecentFormats(activity, recentFormats, current);
-                    callbackInsertTextToEditor.get().callback(current);
-                });
+        builder.setView(viewRoot);
+        builder.setNeutralButton(R.string.help, (dlgI, which) -> cu.openWebpageInExternalBrowser(activity, "https://developer.android.com/reference/java/text/SimpleDateFormat#date-and-time-patterns"));
+        builder.setNegativeButton(R.string.cancel, null);
+        // OK
+        builder.setPositiveButton(android.R.string.ok, (dlgI, which) -> {
+            final String current = formatEditText.getText().toString();
+            saveRecentFormat(activity, current);
+            callbackInsertTextToEditor.get().callback(current);
+        });
 
         dialog.set(builder.show());
     }
@@ -225,17 +199,17 @@ public class DatetimeFormatDialog {
         return isUseFormatInstead != null && isUseFormatInstead ? format : datetime;
     }
 
+    // >
+
     /**
      * Combine recent formats with the predefined formats.
      *
-     * @param recent List of recent formats.
-     * @return Combined, de-duplicated list.
+     * @return Formats list.
      */
-    private static List<String> getAllFormats(final List<String> recent) {
-        final LinkedHashSet<String> formats = new LinkedHashSet<>(recent);
-        formats.addAll(Arrays.asList(PREDEFINED_DATE_TIME_FORMATS));
-        return new ArrayList<>(formats);
+    private static List<String> getAllFormats() {
+        return new ArrayList<>(Arrays.asList(PREDEFINED_DATE_TIME_FORMATS));
     }
+    // <
 
     /**
      * Create data for adapter.
@@ -268,84 +242,47 @@ public class DatetimeFormatDialog {
         }
     }
 
+    // >
+    private static void saveRecentFormat(final Activity activity, final String format) {
+        if (format == null || format.trim().isEmpty()) {
+            return;
+        }
+
+        final SharedPreferences.Editor edit = activity.getSharedPreferences(GsSharedPreferencesPropertyBackend.SHARED_PREF_APP, Context.MODE_PRIVATE).edit();
+        edit.putString(RECENT_FORMAT_STRING, format).apply();
+    }
+    // <
+
+    // >
+
     /**
-     * Load recent formats from settings.
-     * <p>
-     * As formats can contain any character, it is not possible to store an array as as a
-     * delimited string. Instead, formats are stored as 2 stings
-     * a. A String of concatenated format strings
-     * b. A String of comma separated lengths
-     * <p>
-     * The lengths string is used to split the concatenated string.
+     * Load recent format from settings.
      *
      * @param context Context in order to get settings
      * @return List of Strings representing recently used formats
      */
-    private static List<String> getRecentFormats(final Context context) {
+    private static String getRecentFormat(final Context context) {
         final SharedPreferences settings = context.getSharedPreferences(GsSharedPreferencesPropertyBackend.SHARED_PREF_APP, Context.MODE_PRIVATE);
-        final String combined = settings.getString(RECENT_FORMATS_STRING, null);
-        final String lengths = settings.getString(RECENT_FORMATS_LENGTHS, null);
 
-        // Split the
-        final List<String> formats = new ArrayList<>();
-        try {
-            if (combined != null && lengths != null) {
-                int prev = 0;
-                for (final String s : lengths.split(",")) {
-                    int val = Integer.parseInt(s) + prev;
-                    formats.add(combined.substring(prev, val));
-                    prev = val;
-                }
-            }
-        } catch (NumberFormatException | IndexOutOfBoundsException e) {
-            return Collections.emptyList();
-        }
-        return formats;
+        return settings.getString(RECENT_FORMAT_STRING, "");
     }
+    // <
 
+    // >
 
     /**
-     * Save recently used formats, inserting new format if necessary
-     *
-     * @param activity  Activity in order to get settings
-     * @param formats   List of recently used formats
-     * @param newFormat New format, will be inserted at the head of formats if it is not null or empty
-     */
-    private static void saveRecentFormats(final Activity activity, final List<String> formats, final String newFormat) {
-
-        final LinkedHashSet<String> formatSet = new LinkedHashSet<>();
-        if (newFormat != null && !newFormat.trim().isEmpty()) {
-            formatSet.add(newFormat);
-        }
-        for (final String format : formats) {
-            formatSet.add(format);
-            if (formatSet.size() >= MAX_RECENT_FORMATS) {
-                break;
-            }
-        }
-
-        final List<String> lengths = new ArrayList<>();
-        for (final String s : formatSet) {
-            lengths.add(Integer.toString(s.length()));
-        }
-
-        final SharedPreferences.Editor edit = activity.getSharedPreferences(GsSharedPreferencesPropertyBackend.SHARED_PREF_APP, Context.MODE_PRIVATE).edit();
-        edit.putString(RECENT_FORMATS_STRING, TextUtils.join("", formatSet)).apply();
-        edit.putString(RECENT_FORMATS_LENGTHS, TextUtils.join(",", lengths)).apply();
-    }
-
-    /**
-     * Get a date string for the most recently used format
+     * Get a date string for the recently used format
      *
      * @param context Activity in order to get settings
-     * @return String    representing current date / time in last used format
+     * @return String representing current date/time in last used format
      */
-    public static String getMostRecentDate(final Context context) {
-        final List<String> formats = getRecentFormats(context);
-        if (formats.size() > 0) {
-            return GsContextUtils.instance.formatDateTime(context, formats.get(0), System.currentTimeMillis());
+    public static String getRecentDate(final Context context) {
+        final String format = getRecentFormat(context);
+        if (format.length() > 0) {
+            return GsContextUtils.instance.formatDateTime(context, format, System.currentTimeMillis());
         } else {
             return "";
         }
     }
+    // <
 }

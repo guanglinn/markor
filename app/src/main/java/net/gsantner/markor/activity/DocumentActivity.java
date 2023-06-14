@@ -9,6 +9,7 @@ package net.gsantner.markor.activity;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -39,6 +40,7 @@ import java.io.File;
 
 import other.so.AndroidBug5497Workaround;
 
+
 public class DocumentActivity extends MarkorBaseActivity {
     public static final String EXTRA_DO_PREVIEW = "EXTRA_DO_PREVIEW";
 
@@ -49,6 +51,7 @@ public class DocumentActivity extends MarkorBaseActivity {
 
     private static boolean nextLaunchTransparentBg = false;
 
+    
     public static void launch(Activity activity, File path, Boolean doPreview, Intent intent, final Integer lineNumber) {
         final AppSettings as = ApplicationObject.settings();
         if (intent == null) {
@@ -308,6 +311,39 @@ public class DocumentActivity extends MarkorBaseActivity {
     @Override
     @SuppressWarnings("StatementWithEmptyBody")
     public void onBackPressed() {
+        GsFragmentBase currentFragment = getCurrentVisibleFragment();
+        if (currentFragment instanceof DocumentEditAndViewFragment) {
+            DocumentEditAndViewFragment editFragment = ((DocumentEditAndViewFragment) currentFragment);
+            // >
+            // If the text was modified, show AlertDialog
+            // Prompt user whether to save the modifications
+            if (!editFragment.isContentSame()) {
+                String content = getResources().getString(R.string.whether_save);
+                String positive = getResources().getString(R.string.save);
+                String negative = getResources().getString(R.string.cancel);
+                _cu.showDialogWithTextView(this, R.string.save_changes, content, positive, negative, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        editFragment.setManualSave(true);
+                        editFragment.setSavingWill(true);
+                        quit();
+                    }
+                }, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        editFragment.setManualSave(true);
+                        editFragment.setSavingWill(false);
+                        quit();
+                    }
+                });
+            } else {
+                quit();
+            }
+            // <
+        }
+    }
+
+    private void quit() {
         FragmentManager fragMgr = getSupportFragmentManager();
         GsFragmentBase top = getCurrentVisibleFragment();
         if (top != null) {

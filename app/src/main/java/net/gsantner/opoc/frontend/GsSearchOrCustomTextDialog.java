@@ -87,6 +87,7 @@ public class GsSearchOrCustomTextDialog {
         public List<Integer> iconsForData;
         public CharSequence messageText = "";
         public String defaultText = "";
+        public boolean messageMonospaced = false;
         public boolean isSearchEnabled = true;
         public boolean isDarkDialog = false;
         public int dialogWidthDp = WindowManager.LayoutParams.MATCH_PARENT;
@@ -279,9 +280,9 @@ public class GsSearchOrCustomTextDialog {
                 .setOnCancelListener(null)
                 .setNegativeButton(dopt.cancelButtonText, (dialogInterface, i) -> dialogInterface.dismiss());
 
-        // =========================================================================================
+        // ================================================================
 
-        // Ok button only present under these circumstances
+        // OK button only present under these circumstances
         final boolean isSearchOk = dopt.callback != null && dopt.isSearchEnabled;
         final boolean isMultiSelOk = dopt.positionCallback != null && dopt.isMultiSelectEnabled;
         final boolean isPlainDialog = dopt.callback != null && (dopt.data == null || dopt.data.size() == 0);
@@ -418,6 +419,13 @@ public class GsSearchOrCustomTextDialog {
 
         if (!TextUtils.isEmpty(dopt.messageText)) {
             final TextView subTitle = new TextView(context, null, android.R.attr.textAppearanceMedium);
+            // >
+            if (dopt.messageMonospaced) {
+                Typeface typeFace = Typeface.createFromAsset(context.getAssets(), "fonts/Liberation Mono (Courier New).ttf");
+                subTitle.setTypeface(typeFace);
+                dopt.messageMonospaced = false;
+            }
+            // <
             subTitle.setPadding(0, dopt.titleText == 0 ? 0 : paddingBetween, 0, 0);
             subTitle.setText(dopt.messageText);
             subTitle.setTextIsSelectable(true);
