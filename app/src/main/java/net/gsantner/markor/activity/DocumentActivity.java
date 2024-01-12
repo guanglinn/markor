@@ -340,7 +340,7 @@ public class DocumentActivity extends MarkorBaseActivity {
         }
     }
 
-    // > My code
+    // My code start
     @Override
     @SuppressWarnings("StatementWithEmptyBody")
     public void onBackPressed() {
@@ -393,7 +393,7 @@ public class DocumentActivity extends MarkorBaseActivity {
             finish();
         }
     }
-    // <
+    // My code end
 
     public GsFragmentBase showFragment(GsFragmentBase fragment) {
 

@@ -2550,7 +2550,7 @@ public class GsContextUtils {
         return thisp();
     }
 
-    // > My code
+    // My code start
     public void showDialogWithTextView(final Activity context, @StringRes int resTitleId, String text, String positiveButtonText, String negativeButtonText, DialogInterface.OnClickListener positiveListener, DialogInterface.OnClickListener negativeListener) {
         ScrollView scroll = new ScrollView(context);
         AppCompatTextView textView = new AppCompatTextView(context);
@@ -2572,7 +2572,7 @@ public class GsContextUtils {
 
         dialogFullWidth(dialog.show(), true, false);
     }
-    // <
+    // My code end
 
     public void showDialogWithHtmlTextView(final Activity context, @StringRes int resTitleId, String html) {
         showDialogWithHtmlTextView(context, resTitleId, html, true, null);

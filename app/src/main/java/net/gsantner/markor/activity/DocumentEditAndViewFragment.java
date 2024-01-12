@@ -200,7 +200,10 @@ public class DocumentEditAndViewFragment extends MarkorBaseFragment implements F
         _hlEditor.setTextColor(_appSettings.getEditorForegroundColor());
         _hlEditor.setGravity(_appSettings.isEditorStartEditingInCenter() ? Gravity.CENTER : Gravity.NO_GRAVITY);
         _hlEditor.setHighlightingEnabled(_appSettings.getDocumentHighlightState(_document.getPath(), _hlEditor.getText()));
-        _hlEditor.setLineNumbersEnabled(_appSettings.getDocumentLineNumbersEnabled(_document.getPath()));
+        // _hlEditor.setLineNumbersEnabled(_appSettings.getDocumentLineNumbersEnabled(_document.getPath()));
+        // My code start
+        _hlEditor.setLineNumbersEnabled(_appSettings.isLineNumbersEnabled());
+        // My code end
         _hlEditor.setAutoFormatEnabled(_appSettings.getDocumentAutoFormatEnabled(_document.getPath()));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // Do not need to send contents to accessibility
@@ -288,7 +291,7 @@ public class DocumentEditAndViewFragment extends MarkorBaseFragment implements F
         super.onPause();
     }
 
-    // > My code
+    // My code start
     private boolean _savingManual = false; // If manual-save
     private boolean _savingIntent = true; // Intent to save the document
 
@@ -367,7 +370,7 @@ public class DocumentEditAndViewFragment extends MarkorBaseFragment implements F
             return false; // Failure only if saveContent somehow fails
         }
     }
-    // <
+    // My code end
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
@@ -649,6 +652,9 @@ public class DocumentEditAndViewFragment extends MarkorBaseFragment implements F
             case R.id.action_line_numbers: {
                 final boolean newState = !_hlEditor.getLineNumbersEnabled();
                 _appSettings.setDocumentLineNumbersEnabled(_document.getPath(), newState);
+                // My code start
+                _appSettings.setLineNumbersEnabled(newState);
+                // My code end
                 _hlEditor.setLineNumbersEnabled(newState);
                 updateMenuToggleStates(0);
                 return true;
