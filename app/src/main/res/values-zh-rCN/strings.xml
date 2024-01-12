@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
 Maintained 2017-2023 by Gregor Santner <gsantner AT mailbox DOT org>
 
 To the extent possible under law, the person who associated CC0 with
@@ -452,4 +451,9 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="wont_save_min_length">未自动保存字符数不到 %d 的文件以防止数据丢失。</string>
     <string name="advanced_filtering_help"><![CDATA[<small><a href="https://www.github.com/gsantner/markor/discussions/1940">高级过滤语法</a></small>]]></string>
     <string name="filter">过滤器</string>
+
+    <!-- My strings start -->
+    <string name="whether_save">文件已修改，是否保存？</string>
+    <string name="save_changes">保存修改</string>
+    <!-- My strings end -->
 </resources>

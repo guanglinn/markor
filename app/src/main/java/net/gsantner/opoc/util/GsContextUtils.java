@@ -2550,6 +2550,30 @@ public class GsContextUtils {
         return thisp();
     }
 
+    // > My code
+    public void showDialogWithTextView(final Activity context, @StringRes int resTitleId, String text, String positiveButtonText, String negativeButtonText, DialogInterface.OnClickListener positiveListener, DialogInterface.OnClickListener negativeListener) {
+        ScrollView scroll = new ScrollView(context);
+        AppCompatTextView textView = new AppCompatTextView(context);
+        int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16, context.getResources().getDisplayMetrics());
+
+        scroll.setPadding(padding, padding, padding, padding);
+        scroll.addView(textView);
+        textView.setMovementMethod(new LinkMovementMethod());
+        textView.setText(text);
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+
+        AlertDialog.Builder dialog = new AlertDialog.Builder(context);
+        dialog.setView(scroll);
+        dialog.setPositiveButton(positiveButtonText, positiveListener);
+        dialog.setNegativeButton(negativeButtonText, negativeListener);
+        if (resTitleId != 0) {
+            dialog.setTitle(resTitleId);
+        }
+
+        dialogFullWidth(dialog.show(), true, false);
+    }
+    // <
+
     public void showDialogWithHtmlTextView(final Activity context, @StringRes int resTitleId, String html) {
         showDialogWithHtmlTextView(context, resTitleId, html, true, null);
     }

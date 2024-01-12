@@ -9,6 +9,7 @@ package net.gsantner.markor.activity;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -26,7 +27,6 @@ import androidx.fragment.app.FragmentManager;
 import net.gsantner.markor.ApplicationObject;
 import net.gsantner.markor.R;
 import net.gsantner.markor.format.FormatRegistry;
-import net.gsantner.markor.frontend.textview.TextViewUtils;
 import net.gsantner.markor.model.AppSettings;
 import net.gsantner.markor.model.Document;
 import net.gsantner.markor.util.MarkorContextUtils;
@@ -312,9 +312,9 @@ public class DocumentActivity extends MarkorBaseActivity {
         _cu.setKeepScreenOn(this, _appSettings.isKeepScreenOn());
     }
 
-    @Override
+    // @Override
     @SuppressWarnings("StatementWithEmptyBody")
-    public void onBackPressed() {
+    public void onBackPressed_() {
         FragmentManager fragMgr = getSupportFragmentManager();
         GsFragmentBase top = getCurrentVisibleFragment();
         if (top != null) {
@@ -339,6 +339,61 @@ public class DocumentActivity extends MarkorBaseActivity {
             finish();
         }
     }
+
+    // > My code
+    @Override
+    @SuppressWarnings("StatementWithEmptyBody")
+    public void onBackPressed() {
+        GsFragmentBase currentFragment = getCurrentVisibleFragment();
+        if (currentFragment instanceof DocumentEditAndViewFragment) {
+            DocumentEditAndViewFragment editFragment = ((DocumentEditAndViewFragment) currentFragment);
+            // If the text was modified, show an alert dialog to
+            // ask user's intent to save the modifications
+            if (!editFragment.isContentSame()) {
+                String content = getResources().getString(R.string.whether_save);
+                String positive = getResources().getString(R.string.save);
+                String negative = getResources().getString(R.string.cancel);
+                _cu.showDialogWithTextView(this, R.string.save_changes, content, positive, negative, (DialogInterface.OnClickListener) (dialog, which) -> {
+                    editFragment.setSavingManual(true);
+                    editFragment.setSavingIntent(true);
+                    quit();
+                }, (dialog, which) -> {
+                    editFragment.setSavingManual(true);
+                    editFragment.setSavingIntent(false);
+                    quit();
+                });
+            } else {
+                quit();
+            }
+        }
+    }
+
+    private void quit() {
+        FragmentManager fragMgr = getSupportFragmentManager();
+        GsFragmentBase top = getCurrentVisibleFragment();
+        if (top != null) {
+            if (!top.onBackPressed()) {
+                if (fragMgr.getBackStackEntryCount() == 1) {
+                    // Back action was not handled by fragment, handle in activity
+                } else if (fragMgr.getBackStackEntryCount() > 0) {
+                    // Back action was to go one fragment back
+                    fragMgr.popBackStack();
+                    return;
+                }
+            } else {
+                // Was handled by child fragment
+                return;
+            }
+        }
+
+        // Handle in this activity
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            finishAndRemoveTask();
+        } else {
+            finish();
+        }
+    }
+    // <
 
     public GsFragmentBase showFragment(GsFragmentBase fragment) {
 

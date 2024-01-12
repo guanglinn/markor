@@ -278,8 +278,8 @@ public class DocumentEditAndViewFragment extends MarkorBaseFragment implements F
         super.onResume();
     }
 
-    @Override
-    public void onPause() {
+    // @Override
+    public void onPause_() {
         saveDocument(false);
         _webView.onPause();
         _appSettings.addRecentDocument(_document.getFile());
@@ -287,6 +287,87 @@ public class DocumentEditAndViewFragment extends MarkorBaseFragment implements F
         _appSettings.setLastEditPosition(_document.getPath(), _hlEditor.getSelectionStart());
         super.onPause();
     }
+
+    // > My code
+    private boolean _savingManual = false; // If manual-save
+    private boolean _savingIntent = true; // Intent to save the document
+
+    public void setSavingManual(boolean savingManual) {
+        _savingManual = savingManual;
+    }
+
+    public void setSavingIntent(boolean savingIntent) {
+        _savingIntent = savingIntent;
+    }
+
+    @Override
+    public void onPause() {
+        if (_savingManual) {
+            _savingManual = false;
+            saveDocument(true); // manual-save
+        } else {
+            saveDocument(false);
+        }
+
+        _webView.onPause();
+        _appSettings.addRecentDocument(_document.getFile());
+        _appSettings.setLastEditPosition(_document.getPath(), _hlEditor.getSelectionStart());
+        super.onPause();
+    }
+
+    public boolean isContentSame() {
+        final CharSequence text = _hlEditor.getText();
+        return _document.isContentSame(text);
+    }
+
+    public boolean saveDocument(final boolean forceSaveEmpty) {
+        boolean saveIntent = _savingIntent;
+        if (!_savingIntent) {
+            _savingIntent = true; // Reset to default value
+        }
+
+        final Activity activity = getActivity();
+        if (activity == null || isSdStatusBad() || isStateBad()) {
+            errorClipText();
+            return false;
+        }
+
+        // Document is written if writeable && content has changed
+        final CharSequence text = _hlEditor.getText();
+        if (_document.isContentSame(text)) {
+            return true; // Report success if text not changed
+        }
+
+        // Manual-save
+        if (forceSaveEmpty) {
+            if (saveIntent) {
+                if (_document.saveContent(getActivity(), text, _cu, forceSaveEmpty)) {
+                    checkTextChangeState();
+                    return true;
+                } else {
+                    errorClipText();
+                    return false; // Failure only if saveContent somehow fails
+                }
+            } else {
+                return true;
+            }
+        }
+
+        // Auto-save
+        final int minLength = GsContextUtils.TEXTFILE_OVERWRITE_MIN_TEXT_LENGTH;
+        if (text != null && text.length() < minLength) {
+            // Toast.makeText(activity, activity.getString(R.string.wont_save_min_length, minLength), Toast.LENGTH_SHORT).show();
+            return true;
+        }
+        if (_document.saveContent(getActivity(), text, _cu, forceSaveEmpty)) {
+            checkTextChangeState();
+            return true;
+        } else {
+            errorClipText();
+            return false; // Failure only if saveContent somehow fails
+        }
+    }
+    // <
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
@@ -727,7 +808,7 @@ public class DocumentEditAndViewFragment extends MarkorBaseFragment implements F
     }
 
     // Save the file
-    public boolean saveDocument(final boolean forceSaveEmpty) {
+    public boolean saveDocument_(final boolean forceSaveEmpty) {
         final Activity activity = getActivity();
         if (activity == null || isSdStatusBad() || isStateBad()) {
             errorClipText();
