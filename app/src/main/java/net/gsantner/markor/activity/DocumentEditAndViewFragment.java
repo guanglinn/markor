@@ -48,6 +48,7 @@ import net.gsantner.markor.format.TextConverterBase;
 import net.gsantner.markor.frontend.DraggableScrollbarScrollView;
 import net.gsantner.markor.frontend.FileInfoDialog;
 import net.gsantner.markor.frontend.MarkorDialogFactory;
+import net.gsantner.markor.frontend.TocDialogFactory;
 import net.gsantner.markor.frontend.filebrowser.MarkorFileBrowserFactory;
 import net.gsantner.markor.frontend.textview.HighlightingEditor;
 import net.gsantner.markor.frontend.textview.TextViewUtils;
@@ -925,9 +926,19 @@ public class DocumentEditAndViewFragment extends MarkorBaseFragment implements F
 
     @Override
     protected void onToolbarClicked(View v) {
-        if (!_isPreviewVisible && _format != null) {
-            _format.getActions().runTitleClick();
+        // if (!_isPreviewVisible && _format != null) { _format.getActions().runTitleClick(); }
+
+        // My code start
+        if (_format == null) {
+            return;
         }
+
+        if (!_isPreviewVisible) {
+            _format.getActions().runTitleClick();
+        } else if (!_appSettings.isMarkdownTableOfContentsEnabled()) {
+            TocDialogFactory.showTocDialog(getActivity(), getContext(), _webView);
+        }
+        // My code end
     }
 
     @Override

@@ -40,6 +40,7 @@ import net.gsantner.markor.R;
 import net.gsantner.markor.frontend.AttachLinkOrFileDialog;
 import net.gsantner.markor.frontend.DatetimeFormatDialog;
 import net.gsantner.markor.frontend.MarkorDialogFactory;
+import net.gsantner.markor.frontend.TocDialogFactory;
 import net.gsantner.markor.frontend.textview.HighlightingEditor;
 import net.gsantner.markor.frontend.textview.TextViewUtils;
 import net.gsantner.markor.model.AppSettings;
@@ -638,7 +639,15 @@ public abstract class ActionButtonBase {
                 return true;
             }
             case R.string.abid_common_web_jump_to_table_of_contents: {
-                _webView.loadUrl("javascript:document.getElementsByClassName('toc')[0].scrollIntoView();");
+                // My code start
+                if (_appSettings.isMarkdownTableOfContentsEnabled()) {
+                    _webView.loadUrl("javascript:document.getElementsByClassName('toc')[0].scrollIntoView();");
+                    return true;
+                }
+                TocDialogFactory.showTocDialog(_activity, getContext(), _webView);
+                // My code end
+
+                // _webView.loadUrl("javascript:document.getElementsByClassName('toc')[0].scrollIntoView();");
                 return true;
             }
             case R.string.abid_common_view_file_in_other_app: {
