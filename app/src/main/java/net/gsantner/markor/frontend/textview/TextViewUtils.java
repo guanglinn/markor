@@ -94,22 +94,35 @@ public final class TextViewUtils {
         return i;
     }
 
-    public static int getLastNonWhitespace(final CharSequence s, final int start) {
-        for (int i = Math.min(s.length() - 1, start); i >= 0; i--) {
-            char c = s.charAt(i);
-            if (c != ' ' && c != '\t') {
-                return i;
+    public static int getLastNonWhitespace(final CharSequence s) {
+        return getLastNonWhitespace(s, s.length() - 1);
+    }
+
+    public static int getLastNonWhitespace(final CharSequence s, final int end) {
+        if (s != null && end >= 0 && end < s.length()) {
+            for (int i = Math.min(s.length() - 1, end); i >= 0; i--) {
+                char c = s.charAt(i);
+                if (c != ' ' && c != '\t') {
+                    return i;
+                }
             }
         }
         return -1;
     }
 
+
+    public static int getFirstNonWhitespace(final CharSequence s) {
+        return getNextNonWhitespace(s, 0);
+    }
+
     public static int getNextNonWhitespace(final CharSequence s, final int start) {
-        final int length = s.length();
-        for (int i = Math.max(0, start); i < length; i++) {
-            char c = s.charAt(i);
-            if (c != ' ' && c != '\t') {
-                return i;
+        if (s != null && start >= 0) {
+            final int length = s.length();
+            for (int i = start; i < length; i++) {
+                char c = s.charAt(i);
+                if (c != ' ' && c != '\t') {
+                    return i;
+                }
             }
         }
         return -1;
@@ -419,12 +432,14 @@ public final class TextViewUtils {
         final long current = System.currentTimeMillis();
         final String time = GsContextUtils.instance.formatDateTime((Locale) null, "HH:mm", current);
         final String date = GsContextUtils.instance.formatDateTime((Locale) null, "yyyy-MM-dd", current);
+        final String weekday = GsContextUtils.instance.formatDateTime((Locale) null, "EEEE", current);
 
         // Replace placeholders
         text = text
                 .replace("{{time}}", time)
                 .replace("{{date}}", date)
                 .replace("{{title}}", title)
+                .replace("{{weekday}}", weekday)
                 .replace("{{sel}}", selectedText)
                 .replace("{{cursor}}", HighlightingEditor.PLACE_CURSOR_HERE_TOKEN);
 

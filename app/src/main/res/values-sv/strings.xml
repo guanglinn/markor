@@ -27,7 +27,6 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="create_folder">Skapa mapp</string>
     <string name="create_new_document">Skapa nytt dokument</string>
     <string name="move">Flytta</string>
-    <string name="copy">Kopiera</string>
     <string name="info">Information</string>
     <string name="file_folder_already_exists_please_use_a_different_name">Fil/mapp finns redan! Använd ett annat namn</string>
     <string name="import_from_device">Importera från enhet</string>
@@ -60,6 +59,7 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="last_modified">Senast ändrad</string>
     <string name="select_this_folder">Välj den här mappen</string>
     <string name="select">Välj</string>
+    <string name="select_all">Välj alla</string>
     <string name="create">Skapa</string>
     <string name="select_entries">Välj poster</string>
     <string name="one_item_selected">Ett objekt valt</string>
@@ -315,7 +315,7 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="wrap_words">Bryt långa rader</string>
     <string name="line_numbers">Radnummer</string>
     <string name="soft_break_if_not_fit_to_width_else_enable_horizontal_scrolling">Mjuk brytning om texten inte får plats på skärmen. Aktiverar annars horisontell rullning.</string>
-    <string name="recursive_search_in_current_directory">Rekursiv sökning i aktuell katalog.</string>
+    <string name="current_location">nuvarande plats</string>
     <string name="always_open_with_this_app">Öppna alltid med denna app</string>
     <string name="always_open_files_with_this_app_when_list_contains_file_extension">Öppna alltid filer med filtyperna i listan med den här appen. Använd till exempel \'None, .html, .css , .js\' om du vill redigera webbfiler och filer utan filändelse.</string>
     <string name="open_file_with">Öppna fil med</string>
