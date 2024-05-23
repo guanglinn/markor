@@ -1,7 +1,7 @@
 /*#######################################################
  * Copyright (c) 2014 Jeff Martin
  * Copyright (c) 2015 Pedro Lafuente
- * Copyright (c) 2017-2023 Gregor Santner
+ * Copyright (c) 2017-2024 Gregor Santner
  *
  * Licensed under the MIT license.
  * You can get a copy of the license text here:
@@ -17,7 +17,6 @@ import android.widget.RemoteViewsService;
 
 import net.gsantner.markor.ApplicationObject;
 import net.gsantner.markor.R;
-import net.gsantner.markor.frontend.filebrowser.MarkorFileBrowserFactory;
 import net.gsantner.markor.model.AppSettings;
 import net.gsantner.markor.model.Document;
 import net.gsantner.opoc.frontend.filebrowser.GsFileBrowserListAdapter;
@@ -54,9 +53,9 @@ public class WrFilesWidgetFactory implements RemoteViewsService.RemoteViewsFacto
         final AppSettings as = ApplicationObject.settings();
 
         if (dir.equals(GsFileBrowserListAdapter.VIRTUAL_STORAGE_RECENTS)) {
-            _widgetFilesList.addAll(Arrays.asList(MarkorFileBrowserFactory.strlistToArray(ApplicationObject.settings().getRecentDocuments())));
+            _widgetFilesList.addAll(ApplicationObject.settings().getRecentFiles());
         } else if (dir.equals(GsFileBrowserListAdapter.VIRTUAL_STORAGE_POPULAR)) {
-            _widgetFilesList.addAll(Arrays.asList(MarkorFileBrowserFactory.strlistToArray(ApplicationObject.settings().getPopularDocuments())));
+            _widgetFilesList.addAll(ApplicationObject.settings().getPopularFiles());
         } else if (dir.equals(GsFileBrowserListAdapter.VIRTUAL_STORAGE_FAVOURITE)) {
             _widgetFilesList.addAll(ApplicationObject.settings().getFavouriteFiles());
         } else if (dir.exists() && dir.canRead()) {

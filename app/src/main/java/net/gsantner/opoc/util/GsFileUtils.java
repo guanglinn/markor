@@ -1,9 +1,9 @@
 /*#######################################################
  *
- * SPDX-FileCopyrightText: 2017-2023 Gregor Santner <gsantner AT mailbox DOT org>
+ * SPDX-FileCopyrightText: 2017-2024 Gregor Santner <gsantner AT mailbox DOT org>
  * SPDX-License-Identifier: Unlicense OR CC0-1.0
  *
- * Written 2018-2023 by Gregor Santner <gsantner AT mailbox DOT org>
+ * Written 2018-2024 by Gregor Santner <gsantner AT mailbox DOT org>
  * To the extent possible under law, the author(s) have dedicated all copyright and related and neighboring rights to this software to the public domain worldwide. This software is distributed without any warranty.
  * You should have received a copy of the CC0 Public Domain Dedication along with this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 #########################################################*/
@@ -17,6 +17,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.Pair;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import net.gsantner.opoc.format.GsTextUtils;
@@ -79,14 +80,15 @@ public class GsFileUtils {
         public boolean ioError = false;
     }
 
-    public static Pair<String, FileInfo> readTextFileFast(final File file) {
-        final FileInfo info = new FileInfo();
+    public static Pair<String, FileInfo> readInputStreamFast(final InputStream inputStream, @Nullable FileInfo info) {
+        info = info == null ? new FileInfo() : info;
 
-        try (final FileInputStream inputStream = new FileInputStream(file)) {
+        try {
             final ByteArrayOutputStream result = new ByteArrayOutputStream();
 
             final byte[] bomBuffer = new byte[3];
             final int bomReadLength = inputStream.read(bomBuffer);
+
             info.hasBom = bomReadLength == 3 &&
                     bomBuffer[0] == (byte) 0xEF &&
                     bomBuffer[1] == (byte) 0xBB &&
@@ -104,6 +106,19 @@ public class GsFileUtils {
                 result.write(buffer, 0, length);
             }
             return new Pair<>(result.toString("UTF-8"), info);
+        } catch (IOException e) {
+            e.printStackTrace();
+            info.ioError = true;
+        }
+
+        return new Pair<>("", info);
+    }
+
+    public static Pair<String, FileInfo> readTextFileFast(final File file) {
+        final FileInfo info = new FileInfo();
+
+        try (final FileInputStream inputStream = new FileInputStream(file)) {
+            return readInputStreamFast(inputStream, info);
         } catch (FileNotFoundException e) {
             System.err.println("readTextFileFast: File " + file + " not found.");
         } catch (IOException e) {
@@ -509,7 +524,7 @@ public class GsFileUtils {
 
     public static boolean isTextFile(File file) {
         final String mime = getMimeType(file);
-        return mime != null && (mime.startsWith("text/") || mime.contains("xml"));
+        return mime != null && (mime.startsWith("text/") || mime.contains("xml")) && !mime.contains("openxml");
     }
 
     /**

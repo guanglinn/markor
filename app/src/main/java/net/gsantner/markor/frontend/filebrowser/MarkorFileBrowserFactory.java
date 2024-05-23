@@ -1,6 +1,6 @@
 /*#######################################################
  *
- *   Maintained 2017-2023 by Gregor Santner <gsantner AT mailbox DOT org>
+ *   Maintained 2017-2024 by Gregor Santner <gsantner AT mailbox DOT org>
  *   License of this file: Apache 2.0
  *     https://www.apache.org/licenses/LICENSE-2.0
  *
@@ -58,11 +58,6 @@ public class MarkorFileBrowserFactory {
         opts.contentDescriptionSelected = R.string.selected;
         opts.contentDescriptionFile = R.string.file;
 
-        opts.sortFolderFirst = appSettings.isFileBrowserSortFolderFirst();
-        opts.sortByType = appSettings.getFileBrowserSortByType();
-        opts.sortReverse = appSettings.isFileBrowserSortReverse();
-        opts.filterShowDotFiles = appSettings.isFileBrowserFilterShowDotFiles();
-
         opts.accentColor = R.color.accent;
         opts.primaryColor = R.color.primary;
         opts.primaryTextColor = R.color.primary_text;
@@ -72,13 +67,21 @@ public class MarkorFileBrowserFactory {
         opts.fileImage = R.drawable.ic_file_white_24dp;
         opts.folderImage = R.drawable.ic_folder_white_24dp;
 
-        opts.recentFiles = appSettings.getAsFileList(appSettings.getRecentDocuments());
-        opts.popularFiles = appSettings.getAsFileList(appSettings.getPopularDocuments());
-        opts.favouriteFiles = appSettings.getFavouriteFiles();
-
         opts.titleText = R.string.select;
 
         opts.mountedStorageFolder = cu.getStorageAccessFolder(context);
+
+        opts.refresh = () -> {
+            opts.sortFolderFirst = appSettings.isFileBrowserSortFolderFirst();
+            opts.sortByType = appSettings.getFileBrowserSortByType();
+            opts.sortReverse = appSettings.isFileBrowserSortReverse();
+            opts.filterShowDotFiles = appSettings.isFileBrowserFilterShowDotFiles();
+            opts.favouriteFiles = appSettings.getFavouriteFiles();
+            opts.recentFiles = appSettings.getRecentFiles();
+            opts.popularFiles = appSettings.getPopularFiles();
+        };
+        opts.refresh.callback();
+
         return opts;
     }
 

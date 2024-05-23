@@ -1,9 +1,9 @@
 /*#######################################################
  *
- * SPDX-FileCopyrightText: 2017-2023 Gregor Santner <gsantner AT mailbox DOT org>
+ * SPDX-FileCopyrightText: 2017-2024 Gregor Santner <gsantner AT mailbox DOT org>
  * SPDX-License-Identifier: Unlicense OR CC0-1.0
  *
- * Written 2018-2023 by Gregor Santner <gsantner AT mailbox DOT org>
+ * Written 2018-2024 by Gregor Santner <gsantner AT mailbox DOT org>
  * To the extent possible under law, the author(s) have dedicated all copyright and related and neighboring rights to this software to the public domain worldwide. This software is distributed without any warranty.
  * You should have received a copy of the CC0 Public Domain Dedication along with this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 #########################################################*/
@@ -36,7 +36,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import net.gsantner.markor.R;
-import net.gsantner.markor.frontend.textview.TextViewUtils;
+import net.gsantner.opoc.format.GsTextUtils;
 import net.gsantner.opoc.util.GsCollectionUtils;
 import net.gsantner.opoc.util.GsContextUtils;
 import net.gsantner.opoc.util.GsFileUtils;
@@ -87,6 +87,7 @@ public class GsFileBrowserListAdapter extends RecyclerView.Adapter<GsFileBrowser
     private final SharedPreferences _prefApp;
     private final HashMap<File, File> _virtualMapping = new HashMap<>();
     private final Map<File, Integer> _fileIdMap = new HashMap<>();
+    private GsCallback.a0 _blinkCallback;
 
     //########################
     //## Methods
@@ -596,7 +597,7 @@ public class GsFileBrowserListAdapter extends RecyclerView.Adapter<GsFileBrowser
             _recyclerView.postDelayed(() -> {
                 final RecyclerView.ViewHolder holder = _recyclerView.findViewHolderForLayoutPosition(pos);
                 if (holder != null) {
-                    GsContextUtils.blinkView(holder.itemView);
+                    _blinkCallback = GsContextUtils.blinkView(holder.itemView);
                 }
             }, 250);
         }
@@ -617,9 +618,22 @@ public class GsFileBrowserListAdapter extends RecyclerView.Adapter<GsFileBrowser
 
     private static final ExecutorService executorService = new ThreadPoolExecutor(0, 3, 60, TimeUnit.SECONDS, new SynchronousQueue<>());
 
+    // Stop blinking if we are currently blinking
+    private void stopBlinking() {
+        if (_blinkCallback != null) {
+            _blinkCallback.callback();
+            _blinkCallback = null;
+        }
+    }
+
     private void loadFolder(final File folder) {
+        stopBlinking();
         executorService.execute(() -> {
             synchronized (LOAD_FOLDER_SYNC_OBJECT) {
+
+                if (_dopt.refresh != null) {
+                    _dopt.refresh.callback();
+                }
 
                 final File prevFolder = _currentFolder;
                 _currentFolder = folder;
@@ -663,7 +677,7 @@ public class GsFileBrowserListAdapter extends RecyclerView.Adapter<GsFileBrowser
                 } else if (_currentFolder.equals(VIRTUAL_STORAGE_POPULAR)) {
                     newData.addAll(_dopt.popularFiles);
                 } else if (_currentFolder.equals(VIRTUAL_STORAGE_FAVOURITE)) {
-                    GsCollectionUtils.addAll(newData, _dopt.favouriteFiles);
+                    newData.addAll(_dopt.favouriteFiles);
                 } else if (folder.getAbsolutePath().equals("/storage/emulated")) {
                     newData.add(new File(folder, "0"));
                 } else if (folder.getAbsolutePath().equals("/")) {
@@ -678,7 +692,7 @@ public class GsFileBrowserListAdapter extends RecyclerView.Adapter<GsFileBrowser
                     for (int i = 0; i < newData.size(); i++) {
                         final File file = newData.get(i);
                         if (!canWrite(file) && !file.getAbsolutePath().equals("/") && externalFileDir != null && externalFileDir.getAbsolutePath().startsWith(file.getAbsolutePath())) {
-                            final int depth = TextViewUtils.countChars(file.getAbsolutePath(), '/')[0];
+                            final int depth = GsTextUtils.countChars(file.getAbsolutePath(), '/')[0];
                             if (depth < 3) {
                                 final File parent = file.getParentFile();
                                 if (parent != null) {
