@@ -30,6 +30,7 @@ import net.gsantner.markor.format.FormatRegistry;
 import net.gsantner.markor.model.AppSettings;
 import net.gsantner.markor.model.Document;
 import net.gsantner.markor.util.MarkorContextUtils;
+import net.gsantner.markor.util.SavePrompt;
 import net.gsantner.opoc.format.GsTextUtils;
 import net.gsantner.opoc.frontend.base.GsFragmentBase;
 import net.gsantner.opoc.frontend.filebrowser.GsFileBrowserListAdapter;
@@ -48,6 +49,7 @@ public class DocumentActivity extends MarkorBaseActivity {
     private FragmentManager _fragManager;
 
     private static boolean nextLaunchTransparentBg = false;
+    private boolean isSavePromptHidden = true;
 
     public static void launch(
             final Activity activity,
@@ -297,6 +299,11 @@ public class DocumentActivity extends MarkorBaseActivity {
     @Override
     @SuppressWarnings("StatementWithEmptyBody")
     public void onBackPressed() {
+        if (isSavePromptHidden) {
+            isSavePromptHidden = false;
+            SavePrompt.firstActionOnBackPressed(getCurrentVisibleFragment(), this);
+            return;
+        }
         FragmentManager fragMgr = getSupportFragmentManager();
         GsFragmentBase top = getCurrentVisibleFragment();
         if (top != null) {
@@ -320,6 +327,7 @@ public class DocumentActivity extends MarkorBaseActivity {
         } else {
             finish();
         }
+        isSavePromptHidden = true;
     }
 
     @Override

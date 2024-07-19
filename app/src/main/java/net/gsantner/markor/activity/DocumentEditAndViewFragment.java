@@ -54,6 +54,7 @@ import net.gsantner.markor.frontend.textview.TextViewUtils;
 import net.gsantner.markor.model.AppSettings;
 import net.gsantner.markor.model.Document;
 import net.gsantner.markor.util.MarkorContextUtils;
+import net.gsantner.markor.util.SavePrompt;
 import net.gsantner.markor.web.MarkorWebViewClient;
 import net.gsantner.opoc.frontend.filebrowser.GsFileBrowserOptions;
 import net.gsantner.opoc.frontend.settings.GsFontPreferenceCompat;
@@ -101,6 +102,7 @@ public class DocumentEditAndViewFragment extends MarkorBaseFragment implements F
     private MenuItem _saveMenuItem, _undoMenuItem, _redoMenuItem;
     private boolean _isPreviewVisible;
     private boolean _nextConvertToPrintMode = false;
+    public SavePrompt.DocumentSavingState documentSavingState;
 
 
     public DocumentEditAndViewFragment() {
@@ -130,6 +132,7 @@ public class DocumentEditAndViewFragment extends MarkorBaseFragment implements F
         final Activity activity = getActivity();
 
         _hlEditor = view.findViewById(R.id.document__fragment__edit__highlighting_editor);
+        documentSavingState = new SavePrompt.DocumentSavingState(_document, _hlEditor);
         _textActionsBar = view.findViewById(R.id.document__fragment__edit__text_actions_bar);
         _webView = view.findViewById(R.id.document__fragment_view_webview);
         _primaryScrollView = view.findViewById(R.id.document__fragment__edit__content_editor__scrolling_parent);
@@ -282,7 +285,7 @@ public class DocumentEditAndViewFragment extends MarkorBaseFragment implements F
 
     @Override
     public void onPause() {
-        saveDocument(false);
+        SavePrompt.firstActionOnPause(this, documentSavingState); // saveDocument(false);
         _webView.onPause();
         _appSettings.addRecentFile(_document.getFile());
         _appSettings.setDocumentPreviewState(_document.getPath(), _isPreviewVisible);
@@ -811,6 +814,8 @@ public class DocumentEditAndViewFragment extends MarkorBaseFragment implements F
         // Document is written iff writeable && content has changed
         final CharSequence text = _hlEditor.getText();
         if (!_document.isContentSame(text)) {
+            Boolean result = SavePrompt.firstActionIfContentDifferent(forceSaveEmpty, SavePrompt.getSavingIntent(documentSavingState), this, _document, text, _cu);
+            if (result != null) return result;
             final int minLength = GsContextUtils.TEXTFILE_OVERWRITE_MIN_TEXT_LENGTH;
             if (!forceSaveEmpty && text != null && text.length() < minLength) {
                 final String message = activity.getString(R.string.wont_save_min_length, minLength);

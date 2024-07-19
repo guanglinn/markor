@@ -455,4 +455,5 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="wont_save_min_length">字符数不到 %d 的文件不会自动保存防止数据丢失。</string>
     <string name="advanced_filtering_help"><![CDATA[<small><a href="https://www.github.com/gsantner/markor/discussions/1940">高级过滤语法</a></small>]]></string>
     <string name="filter">过滤器</string>
+    <string name="save_prompt">文件已修改，是否保存？</string>
 </resources>
