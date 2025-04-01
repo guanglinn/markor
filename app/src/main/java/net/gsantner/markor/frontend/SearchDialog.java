@@ -137,24 +137,6 @@ public class SearchDialog extends Fragment {
                 checked = toggleViewCheckedState(view, checked);
             }
         });
-
-        view.findViewById(R.id.replaceImageButton).setOnClickListener(new View.OnClickListener() {
-            private boolean checked = false;
-
-            @Override
-            public void onClick(View view) {
-                checked = toggleViewCheckedState(view, checked);
-            }
-        });
-
-        view.findViewById(R.id.replaceAllImageButton).setOnClickListener(new View.OnClickListener() {
-            private boolean checked = false;
-
-            @Override
-            public void onClick(View view) {
-                checked = toggleViewCheckedState(view, checked);
-            }
-        });
     }
 
     private boolean toggleViewCheckedState(View view, boolean checked) {
