@@ -35,6 +35,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.StringRes;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentActivity;
 
 import net.gsantner.markor.ApplicationObject;
 import net.gsantner.markor.R;
@@ -765,7 +766,7 @@ public class MarkorDialogFactory {
     }
 
     // Basic search dialog
-    public static void showSearchDialog(final Activity activity, final EditText text) {
+    public static void showSearchDialog_(final Activity activity, final EditText text) {
         final DialogOptions dopt = new DialogOptions();
         baseConf(activity, dopt);
         final Editable edit = text.getText();
@@ -780,6 +781,11 @@ public class MarkorDialogFactory {
         dopt.neutralButtonText = R.string.search_and_replace;
         dopt.positionCallback = (result) -> TextViewUtils.selectLines(text, result);
         GsSearchOrCustomTextDialog.showMultiChoiceDialogWithSearchFilterUI(activity, dopt);
+    }
+
+    // New search dialog
+    public static void showSearchDialog(final Activity activity, final EditText text) {
+        SearchDialog.show((FragmentActivity) activity, text);
     }
 
     private static class Heading {
