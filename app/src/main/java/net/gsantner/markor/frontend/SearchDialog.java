@@ -69,17 +69,10 @@ public class SearchDialog extends Fragment {
             }
         });
 
-        final View fragmentView = view;
-        View replaceLinearLayout = fragmentView.findViewById(R.id.replaceLinearLayout);
-        replaceLinearLayout.setVisibility(View.GONE);
         view.findViewById(R.id.toggleImageButton).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                if (replaceLinearLayout == null) {
-                    return;
-                }
-
-                toggleFindReplaceLayout(fragmentView);
+            public void onClick(View v) {
+                toggleFindReplaceLayout(view);
             }
         });
 
@@ -160,11 +153,11 @@ public class SearchDialog extends Fragment {
     }
 
     private void toggleFindReplaceLayout(View parent) {
-        if (parent.findViewById(R.id.replaceLinearLayout).getVisibility() == View.VISIBLE) {
-            setReplaceLayoutVisibility(parent, false);
-        } else {
-            setReplaceLayoutVisibility(parent, true);
+        View view = parent.findViewById(R.id.replaceLinearLayout);
+        if (view == null) {
+            return;
         }
+        setReplaceLayoutVisibility(parent, view.getVisibility() != View.VISIBLE);
     }
 
     private static void requestEditTextFocus(View parent) {
