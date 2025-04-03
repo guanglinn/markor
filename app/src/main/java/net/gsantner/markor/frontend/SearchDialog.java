@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -39,8 +40,10 @@ public class SearchDialog extends Fragment {
         view.post(() -> {
             view.setX((displayWidth - view.getWidth()) / 2f);
             view.setY(0);
-            view.setVisibility(View.VISIBLE);
+            setReplaceLayoutVisibility(view, false);
             requestEditTextFocus(view);
+
+            view.setVisibility(View.VISIBLE);
         });
 
         EditText searchEditText = view.findViewById(R.id.searchEditText);
@@ -76,11 +79,7 @@ public class SearchDialog extends Fragment {
                     return;
                 }
 
-                if (replaceLinearLayout.getVisibility() == View.VISIBLE) {
-                    replaceLinearLayout.setVisibility(View.GONE);
-                } else {
-                    replaceLinearLayout.setVisibility(View.VISIBLE);
-                }
+                toggleFindReplaceLayout(fragmentView);
             }
         });
 
@@ -146,6 +145,26 @@ public class SearchDialog extends Fragment {
             view.getBackground().setColorFilter(CHECKED_COLOR, PorterDuff.Mode.DARKEN);
         }
         return !checked;
+    }
+
+    private void setReplaceLayoutVisibility(View parent, boolean visible) {
+        View replaceLinearLayout = parent.findViewById(R.id.replaceLinearLayout);
+        ImageButton imageButton = parent.findViewById(R.id.toggleImageButton);
+        if (visible) {
+            replaceLinearLayout.setVisibility(View.VISIBLE);
+            imageButton.setImageResource(R.drawable.ic_chevron_down);
+        } else {
+            replaceLinearLayout.setVisibility(View.GONE);
+            imageButton.setImageResource(R.drawable.ic_chevron_right);
+        }
+    }
+
+    private void toggleFindReplaceLayout(View parent) {
+        if (parent.findViewById(R.id.replaceLinearLayout).getVisibility() == View.VISIBLE) {
+            setReplaceLayoutVisibility(parent, false);
+        } else {
+            setReplaceLayoutVisibility(parent, true);
+        }
     }
 
     private static void requestEditTextFocus(View parent) {
