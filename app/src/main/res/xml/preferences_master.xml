@@ -353,10 +353,16 @@
                 app:showSeekBarValue="true" />
             <CheckBoxPreference
                 android:defaultValue="true"
-                android:icon="@drawable/ic_visibility_black_24dp"
+                android:icon="@drawable/ic_baseline_wrap_text_24"
                 android:key="@string/pref_key__editor_enable_line_breaking"
                 android:summary="@string/soft_break_if_not_fit_to_width_else_enable_horizontal_scrolling"
                 android:title="@string/wrap_words" />
+            <CheckBoxPreference
+                android:defaultValue="false"
+                android:icon="@drawable/ic_line_numbers_24dp"
+                android:key="@string/pref_key__enable_line_numbers"
+                android:summary="@string/show_line_numbers"
+                android:title="@string/line_numbers" />
             <CheckBoxPreference
                 android:defaultValue="false"
                 android:icon="@drawable/ic_filter_center_focus_black_24dp"

@@ -149,10 +149,6 @@ public class AppSettings extends GsSharedPreferencesPropertyBackend {
         return getBool(R.string.pref_key__enable_line_numbers, false);
     }
 
-    public void setLineNumbersEnabled(boolean enabled) {
-        setBool(R.string.pref_key__enable_line_numbers, enabled);
-    }
-
     public boolean isDynamicHighlightingEnabled() {
         return getBool(R.string.pref_key__is_dynamic_highlighting_activated, true);
     }
@@ -463,17 +459,23 @@ public class AppSettings extends GsSharedPreferencesPropertyBackend {
 
     public void setDocumentLineNumbersEnabled(final String path, final boolean enabled) {
         if (fexists(path)) {
-            setBool(PREF_PREFIX_LINE_NUM_STATE + path, enabled);
+            String key = PREF_PREFIX_LINE_NUM_STATE + path;
+            if (enabled == isLineNumbersEnabled()) {
+                if (contains(key, _prefApp)) {
+                    remove(key, _prefApp);
+                }
+            } else {
+                setBool(key, enabled);
+            }
         }
     }
 
     public boolean getDocumentLineNumbersEnabled(final String path) {
-        final boolean _default = false;
-        if (!fexists(path)) {
-            return _default;
-        } else {
+        final boolean _default = isLineNumbersEnabled();
+        if (fexists(path)) {
             return getBool(PREF_PREFIX_LINE_NUM_STATE + path, _default);
         }
+        return _default;
     }
 
     public void setDocumentFormat(final String path, @StringRes final int format) {
